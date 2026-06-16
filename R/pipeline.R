@@ -18,6 +18,12 @@
 #' @param include_full Fit unstratified baseline.
 #' @param plot_diagnostics If `TRUE`, save per-stratum diagnostic plots.
 #' @param node_groups Optional node group mapping for plots.
+#' @param width Save width in inches for stratum diagnostic plots.
+#' @param height Save height in inches for stratum diagnostic plots.
+#' @param dpi Save resolution for stratum diagnostic PNG files.
+#' @param comparison_width Save width in inches for comparison plots.
+#' @param comparison_height Save height in inches for comparison plots.
+#' @param comparison_dpi Save resolution for comparison PNG files.
 #' @param ... Additional arguments passed to [plot_stratum_diagnostics()].
 #' @return List with `prep`, `fits`, `plots`, and `comparisons`.
 #' @export
@@ -36,6 +42,12 @@ run_copula_pipeline <- function(data,
                                 include_full = FALSE,
                                 plot_diagnostics = TRUE,
                                 node_groups = NULL,
+                                width = 10,
+                                height = 10,
+                                dpi = 150,
+                                comparison_width = 16,
+                                comparison_height = 11,
+                                comparison_dpi = 150,
                                 ...) {
   method <- match.arg(method)
 
@@ -66,6 +78,9 @@ run_copula_pipeline <- function(data,
       fits,
       out_dir = fig_dir,
       node_groups = node_groups,
+      width = width,
+      height = height,
+      dpi = dpi,
       ...
     )
   }
@@ -94,7 +109,13 @@ run_copula_pipeline <- function(data,
         label_b = nm_b
       )
       pair_dir <- file.path(cmp_dir, paste(nm_a, "vs", nm_b, sep = "_"))
-      plot_stratum_comparison(cmp, out_dir = pair_dir)
+      plot_stratum_comparison(
+        cmp,
+        out_dir = pair_dir,
+        width = comparison_width,
+        height = comparison_height,
+        dpi = comparison_dpi
+      )
       comparisons[[paste(nm_a, "vs", nm_b, sep = "_")]] <- cmp
     }
     if (length(comparisons) > 0 && !is.null(out_dir)) {

@@ -184,9 +184,13 @@ comparison_bar_plot <- function(cmp_df, label_a, label_b, title, delta_threshold
 #' @param label_threshold Minimum |delta| for edge labels in scatter plots.
 #' @param max_labels Maximum number of extreme pairs to label in scatter plots.
 #' @param delta_threshold Minimum |delta| for bar charts.
-#' @param width Plot width in inches.
-#' @param height Plot height in inches.
-#' @param dpi Resolution.
+#' @param width Default save width in inches (scatter and bar plots).
+#' @param height Default save height in inches (scatter and bar plots).
+#' @param scatter_width Optional scatter plot width override.
+#' @param scatter_height Optional scatter plot height override.
+#' @param bar_width Optional bar plot width override.
+#' @param bar_height Optional bar plot height override.
+#' @param dpi Resolution for saved PNG files.
 #' @return List with `plots` keyed by matrix type (each containing `scatter` and `bar`).
 #' @export
 plot_stratum_comparison <- function(cmp,
@@ -196,6 +200,10 @@ plot_stratum_comparison <- function(cmp,
                                      delta_threshold = 0.05,
                                      width = 16,
                                      height = 11,
+                                     scatter_width = NULL,
+                                     scatter_height = NULL,
+                                     bar_width = NULL,
+                                     bar_height = NULL,
                                      dpi = 150) {
   if (!inherits(cmp, "copula_stratum_comparison") && !is.list(cmp)) {
     stop("cmp must be output of compare_two_strata().", call. = FALSE)
@@ -237,19 +245,23 @@ plot_stratum_comparison <- function(cmp,
       if (!dir.exists(out_dir)) {
         dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
       }
+      sc_w <- resolve_dim(width, scatter_width)
+      sc_h <- resolve_dim(height, scatter_height)
+      bar_w <- resolve_dim(width, bar_width)
+      bar_h <- resolve_dim(height, bar_height)
       copula_ggsave(
         file.path(out_dir, paste0(mat_name, "_scatter.png")),
         plot = p_scatter,
-        width = width,
-        height = height,
+        width = sc_w,
+        height = sc_h,
         dpi = dpi
       )
       if (!is.null(p_bar)) {
         copula_ggsave(
           file.path(out_dir, paste0(mat_name, "_bar.png")),
           plot = p_bar,
-          width = width,
-          height = height,
+          width = bar_w,
+          height = bar_h,
           dpi = dpi
         )
       }

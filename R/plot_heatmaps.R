@@ -125,9 +125,13 @@ save_grob <- function(grob, path, width = 10, height = 10, dpi = 150) {
 #' @param min_pcor Minimum |partial correlation| for network edges.
 #' @param node_groups Optional node group mapping.
 #' @param seed Layout seed.
-#' @param width Plot width in inches.
-#' @param height Plot height in inches.
-#' @param dpi Resolution for saved files.
+#' @param width Default save width in inches (network and heatmaps).
+#' @param height Default save height in inches (network and heatmaps).
+#' @param network_width Optional network plot width override.
+#' @param network_height Optional network plot height override.
+#' @param heatmap_width Optional heatmap width override.
+#' @param heatmap_height Optional heatmap height override.
+#' @param dpi Resolution for saved PNG files.
 #' @return List with ggplot/grob objects: `network`, `copula_cor_heatmap`, `pcor_heatmap`.
 #' @export
 plot_stratum_diagnostics <- function(fit_result,
@@ -138,6 +142,10 @@ plot_stratum_diagnostics <- function(fit_result,
                                      seed = 42,
                                      width = 10,
                                      height = 10,
+                                     network_width = NULL,
+                                     network_height = NULL,
+                                     heatmap_width = NULL,
+                                     heatmap_height = NULL,
                                      dpi = 150) {
   if (is.null(fit_result)) {
     stop("fit_result is NULL.", call. = FALSE)
@@ -166,17 +174,21 @@ plot_stratum_diagnostics <- function(fit_result,
     if (!dir.exists(out_dir)) {
       dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
     }
+    net_w <- resolve_dim(width, network_width)
+    net_h <- resolve_dim(height, network_height)
+    hm_w <- resolve_dim(width, heatmap_width)
+    hm_h <- resolve_dim(height, heatmap_height)
     if (!is.null(p_net)) {
       copula_ggsave(
         file.path(out_dir, "network.png"),
         plot = p_net,
-        width = width,
-        height = height,
+        width = net_w,
+        height = net_h,
         dpi = dpi
       )
     }
-    save_grob(ph_cor, file.path(out_dir, "copula_cor_heatmap.png"), width, height, dpi)
-    save_grob(ph_pcor, file.path(out_dir, "pcor_heatmap.png"), width, height, dpi)
+    save_grob(ph_cor, file.path(out_dir, "copula_cor_heatmap.png"), hm_w, hm_h, dpi)
+    save_grob(ph_pcor, file.path(out_dir, "pcor_heatmap.png"), hm_w, hm_h, dpi)
     message("Saved diagnostics to: ", out_dir)
   }
 
@@ -191,12 +203,27 @@ plot_stratum_diagnostics <- function(fit_result,
 #'
 #' @param fits Output of [fit_copula_strata()] or a named list of fit results.
 #' @param out_dir Base output directory. Each stratum gets a subfolder.
-#' @param ... Passed to [plot_stratum_diagnostics()].
+#' @param width Save width in inches (passed to [plot_stratum_diagnostics()]).
+#' @param height Save height in inches (passed to [plot_stratum_diagnostics()]).
+#' @param dpi Save resolution for PNG files (passed to [plot_stratum_diagnostics()]).
+#' @param ... Additional arguments passed to [plot_stratum_diagnostics()].
 #' @return Named list of per-stratum plot objects.
 #' @export
-plot_all_strata <- function(fits, out_dir = "figures", ...) {
+plot_all_strata <- function(fits,
+                            out_dir = "figures",
+                            width = 10,
+                            height = 10,
+                            dpi = 150,
+                            ...) {
   fit_list <- if (!is.null(fits$fits)) fits$fits else fits
   plots <- list()
+  extra <- list(...)
+  if (!is.null(extra$width)) width <- extra$width
+  if (!is.null(extra$height)) height <- extra$height
+  if (!is.null(extra$dpi)) dpi <- extra$dpi
+  extra$width <- NULL
+  extra$height <- NULL
+  extra$dpi <- NULL
 
   for (nm in names(fit_list)) {
     stratum_dir <- if (!is.null(out_dir)) {
@@ -204,11 +231,19 @@ plot_all_strata <- function(fits, out_dir = "figures", ...) {
     } else {
       NULL
     }
-    plots[[nm]] <- plot_stratum_diagnostics(
-      fit_list[[nm]],
-      stratum_label = nm,
-      out_dir = stratum_dir,
-      ...
+    plots[[nm]] <- do.call(
+      plot_stratum_diagnostics,
+      c(
+        list(
+          fit_result = fit_list[[nm]],
+          stratum_label = nm,
+          out_dir = stratum_dir,
+          width = width,
+          height = height,
+          dpi = dpi
+        ),
+        extra
+      )
     )
   }
 
