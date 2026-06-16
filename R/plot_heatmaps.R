@@ -1,15 +1,15 @@
 #' Plot copula correlation heatmap
 #'
-#' @param result Output of [fit_stratum_copula()].
+#' @param result Output of [FitStratumCopula()].
 #' @param title Plot title.
 #' @param vars Optional subset of variables to display.
 #' @return pheatmap grob.
 #' @export
-plot_copula_cor_heatmap <- function(result, title = "Copula Correlation Matrix", vars = NULL) {
+PlotCopulaCorHeatmap <- function(result, title = "Copula Correlation Matrix", vars = NULL) {
   if (is.null(result)) {
     stop("result is NULL.", call. = FALSE)
   }
-  mat <- result$copula_cor
+  mat <- result$copulaCor
   if (!is.null(vars)) {
     vars <- intersect(vars, colnames(mat))
     mat <- mat[vars, vars, drop = FALSE]
@@ -37,21 +37,21 @@ symmetric_matrix_breaks <- function(mat, n = 101) {
 
 #' Plot partial correlation heatmap
 #'
-#' @param result Output of [fit_stratum_copula()].
+#' @param result Output of [FitStratumCopula()].
 #' @param title Plot title.
 #' @param vars Optional subset of variables to display.
-#' @param zero_diag If `TRUE`, zero the diagonal for display.
+#' @param zeroDiag If `TRUE`, zero the diagonal for display.
 #' @return pheatmap grob.
 #' @export
-plot_pcor_heatmap <- function(result,
-                              title = "Partial Correlation Matrix (Glasso)",
-                              vars = NULL,
-                              zero_diag = TRUE) {
+PlotPcorHeatmap <- function(result,
+                             title = "Partial Correlation Matrix (Glasso)",
+                             vars = NULL,
+                             zeroDiag = TRUE) {
   if (is.null(result)) {
     stop("result is NULL.", call. = FALSE)
   }
   mat <- result$pcor
-  if (isTRUE(zero_diag)) {
+  if (isTRUE(zeroDiag)) {
     diag(mat) <- 0
   }
   if (!is.null(vars)) {
@@ -119,103 +119,103 @@ save_grob <- function(grob, path, width = 10, height = 10, dpi = 150) {
 
 #' Plot single-stratum diagnostics (network + heatmaps)
 #'
-#' @param fit_result Output of [fit_stratum_copula()].
-#' @param stratum_label Label used in plot titles and file names.
-#' @param out_dir Directory for saved PNG/PDF files. If `NULL`, plots are not saved.
-#' @param min_pcor Minimum |partial correlation| for network edges.
-#' @param node_groups Optional node group mapping.
+#' @param fitResult Output of [FitStratumCopula()].
+#' @param stratumLabel Label used in plot titles and file names.
+#' @param outDir Directory for saved PNG/PDF files. If `NULL`, plots are not saved.
+#' @param minPcor Minimum |partial correlation| for network edges.
+#' @param nodeGroups Optional node group mapping.
 #' @param seed Layout seed.
 #' @param width Default save width in inches (network and heatmaps).
 #' @param height Default save height in inches (network and heatmaps).
-#' @param network_width Optional network plot width override.
-#' @param network_height Optional network plot height override.
-#' @param heatmap_width Optional heatmap width override.
-#' @param heatmap_height Optional heatmap height override.
+#' @param networkWidth Optional network plot width override.
+#' @param networkHeight Optional network plot height override.
+#' @param heatmapWidth Optional heatmap width override.
+#' @param heatmapHeight Optional heatmap height override.
 #' @param dpi Resolution for saved PNG files.
-#' @return List with ggplot/grob objects: `network`, `copula_cor_heatmap`, `pcor_heatmap`.
+#' @return List with ggplot/grob objects: `network`, `copulaCorHeatmap`, `pcorHeatmap`.
 #' @export
-plot_stratum_diagnostics <- function(fit_result,
-                                     stratum_label = "stratum",
-                                     out_dir = NULL,
-                                     min_pcor = 0.01,
-                                     node_groups = NULL,
-                                     seed = 42,
-                                     width = 10,
-                                     height = 10,
-                                     network_width = NULL,
-                                     network_height = NULL,
-                                     heatmap_width = NULL,
-                                     heatmap_height = NULL,
-                                     dpi = 150) {
-  if (is.null(fit_result)) {
-    stop("fit_result is NULL.", call. = FALSE)
+PlotStratumDiagnostics <- function(fitResult,
+                                   stratumLabel = "stratum",
+                                   outDir = NULL,
+                                   minPcor = 0.01,
+                                   nodeGroups = NULL,
+                                   seed = 42,
+                                   width = 10,
+                                   height = 10,
+                                   networkWidth = NULL,
+                                   networkHeight = NULL,
+                                   heatmapWidth = NULL,
+                                   heatmapHeight = NULL,
+                                   dpi = 150) {
+  if (is.null(fitResult)) {
+    stop("fitResult is NULL.", call. = FALSE)
   }
 
-  title_base <- stratum_label
-  p_net <- plot_copula_network(
-    fit_result,
+  title_base <- stratumLabel
+  network_plot <- PlotCopulaNetwork(
+    fitResult,
     title = paste(title_base, "\u2014 Nonparanormal Copula Network"),
     seed = seed,
-    min_pcor = min_pcor,
-    node_groups = node_groups,
-    print_plot = FALSE
+    minPcor = minPcor,
+    nodeGroups = nodeGroups,
+    printPlot = FALSE
   )
 
-  ph_cor <- plot_copula_cor_heatmap(
-    fit_result,
+  copula_heatmap <- PlotCopulaCorHeatmap(
+    fitResult,
     title = paste("Copula Correlation Matrix (", title_base, ")", sep = "")
   )
-  ph_pcor <- plot_pcor_heatmap(
-    fit_result,
+  pcor_heatmap <- PlotPcorHeatmap(
+    fitResult,
     title = paste("Partial Correlation Matrix (Glasso,", title_base, ")", sep = " ")
   )
 
-  if (!is.null(out_dir)) {
-    if (!dir.exists(out_dir)) {
-      dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+  if (!is.null(outDir)) {
+    if (!dir.exists(outDir)) {
+      dir.create(outDir, recursive = TRUE, showWarnings = FALSE)
     }
-    net_w <- resolve_dim(width, network_width)
-    net_h <- resolve_dim(height, network_height)
-    hm_w <- resolve_dim(width, heatmap_width)
-    hm_h <- resolve_dim(height, heatmap_height)
-    if (!is.null(p_net)) {
+    network_width <- resolve_dim(width, networkWidth)
+    network_height <- resolve_dim(height, networkHeight)
+    heatmap_width <- resolve_dim(width, heatmapWidth)
+    heatmap_height <- resolve_dim(height, heatmapHeight)
+    if (!is.null(network_plot)) {
       copula_ggsave(
-        file.path(out_dir, "network.png"),
-        plot = p_net,
-        width = net_w,
-        height = net_h,
+        file.path(outDir, "network.png"),
+        plot = network_plot,
+        width = network_width,
+        height = network_height,
         dpi = dpi
       )
     }
-    save_grob(ph_cor, file.path(out_dir, "copula_cor_heatmap.png"), hm_w, hm_h, dpi)
-    save_grob(ph_pcor, file.path(out_dir, "pcor_heatmap.png"), hm_w, hm_h, dpi)
-    message("Saved diagnostics to: ", out_dir)
+    save_grob(copula_heatmap, file.path(outDir, "copula_cor_heatmap.png"), heatmap_width, heatmap_height, dpi)
+    save_grob(pcor_heatmap, file.path(outDir, "pcor_heatmap.png"), heatmap_width, heatmap_height, dpi)
+    message("Saved diagnostics to: ", outDir)
   }
 
   invisible(list(
-    network = p_net,
-    copula_cor_heatmap = ph_cor,
-    pcor_heatmap = ph_pcor
+    network = network_plot,
+    copulaCorHeatmap = copula_heatmap,
+    pcorHeatmap = pcor_heatmap
   ))
 }
 
 #' Plot diagnostics for all fitted strata
 #'
-#' @param fits Output of [fit_copula_strata()] or a named list of fit results.
-#' @param out_dir Base output directory. Each stratum gets a subfolder.
-#' @param width Save width in inches (passed to [plot_stratum_diagnostics()]).
-#' @param height Save height in inches (passed to [plot_stratum_diagnostics()]).
-#' @param dpi Save resolution for PNG files (passed to [plot_stratum_diagnostics()]).
-#' @param ... Additional arguments passed to [plot_stratum_diagnostics()].
+#' @param fits Output of [FitCopulaStrata()] or a named list of fit results.
+#' @param outDir Base output directory. Each stratum gets a subfolder.
+#' @param width Save width in inches (passed to [PlotStratumDiagnostics()]).
+#' @param height Save height in inches (passed to [PlotStratumDiagnostics()]).
+#' @param dpi Save resolution for PNG files (passed to [PlotStratumDiagnostics()]).
+#' @param ... Additional arguments passed to [PlotStratumDiagnostics()].
 #' @return Named list of per-stratum plot objects.
 #' @export
-plot_all_strata <- function(fits,
-                            out_dir = "figures",
-                            width = 10,
-                            height = 10,
-                            dpi = 150,
-                            ...) {
-  fit_list <- if (!is.null(fits$fits)) fits$fits else fits
+PlotAllStrata <- function(fits,
+                          outDir = "figures",
+                          width = 10,
+                          height = 10,
+                          dpi = 150,
+                          ...) {
+  fit_results_list <- if (!is.null(fits$fits)) fits$fits else fits
   plots <- list()
   extra <- list(...)
   if (!is.null(extra$width)) width <- extra$width
@@ -225,19 +225,19 @@ plot_all_strata <- function(fits,
   extra$height <- NULL
   extra$dpi <- NULL
 
-  for (nm in names(fit_list)) {
-    stratum_dir <- if (!is.null(out_dir)) {
-      file.path(out_dir, gsub("[^A-Za-z0-9._-]+", "_", nm))
+  for (nm in names(fit_results_list)) {
+    stratum_output_dir <- if (!is.null(outDir)) {
+      file.path(outDir, gsub("[^A-Za-z0-9._-]+", "_", nm))
     } else {
       NULL
     }
     plots[[nm]] <- do.call(
-      plot_stratum_diagnostics,
+      PlotStratumDiagnostics,
       c(
         list(
-          fit_result = fit_list[[nm]],
-          stratum_label = nm,
-          out_dir = stratum_dir,
+          fitResult = fit_results_list[[nm]],
+          stratumLabel = nm,
+          outDir = stratum_output_dir,
           width = width,
           height = height,
           dpi = dpi

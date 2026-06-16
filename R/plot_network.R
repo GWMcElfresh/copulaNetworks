@@ -1,23 +1,23 @@
 #' Resolve node group labels for plotting
 #'
 #' @param vars Character vector of variable names.
-#' @param node_groups Named character vector mapping variable to group, or a
+#' @param nodeGroups Named character vector mapping variable to group, or a
 #'   function accepting variable names and returning group labels. Default: all `"Node"`.
 #' @return Character vector of group labels.
 #' @keywords internal
-resolve_node_groups <- function(vars, node_groups = NULL) {
-  if (is.null(node_groups)) {
+resolve_node_groups <- function(vars, nodeGroups = NULL) {
+  if (is.null(nodeGroups)) {
     return(rep("Node", length(vars)))
   }
-  if (is.function(node_groups)) {
-    return(node_groups(vars))
+  if (is.function(nodeGroups)) {
+    return(nodeGroups(vars))
   }
-  if (is.character(node_groups)) {
-    out <- node_groups[vars]
+  if (is.character(nodeGroups)) {
+    out <- nodeGroups[vars]
     out[is.na(out)] <- "Other"
     return(unname(out))
   }
-  stop("node_groups must be NULL, a character named vector, or a function.", call. = FALSE)
+  stop("nodeGroups must be NULL, a character named vector, or a function.", call. = FALSE)
 }
 
 #' Default palette for node groups
@@ -54,20 +54,20 @@ format_node_labels <- function(vars) {
 #'
 #' Edge width and alpha encode |partial correlation|; edge colour encodes sign.
 #'
-#' @param result Output of [fit_stratum_copula()].
+#' @param result Output of [FitStratumCopula()].
 #' @param title Plot title.
 #' @param seed Random seed for FR layout.
-#' @param min_pcor Minimum |partial correlation| to display an edge.
-#' @param node_groups Optional group mapping (named vector or function).
-#' @param print_plot If `TRUE`, print the plot before returning.
+#' @param minPcor Minimum |partial correlation| to display an edge.
+#' @param nodeGroups Optional group mapping (named vector or function).
+#' @param printPlot If `TRUE`, print the plot before returning.
 #' @return ggplot object, or `NULL` if nothing to plot.
 #' @export
-plot_copula_network <- function(result,
-                                title = "",
-                                seed = 42,
-                                min_pcor = 0.01,
-                                node_groups = NULL,
-                                print_plot = TRUE) {
+PlotCopulaNetwork <- function(result,
+                              title = "",
+                              seed = 42,
+                              minPcor = 0.01,
+                              nodeGroups = NULL,
+                              printPlot = TRUE) {
   if (is.null(result)) {
     message("No result to plot.")
     return(invisible(NULL))
@@ -89,28 +89,29 @@ plot_copula_network <- function(result,
     pcor = pcor_mat[edges_idx],
     stringsAsFactors = FALSE
   )
-  edge_df <- edge_df[abs(edge_df$pcor) >= min_pcor, , drop = FALSE]
+  edge_df <- edge_df[abs(edge_df$pcor) >= minPcor, , drop = FALSE]
   edge_df$abs_pcor <- abs(edge_df$pcor)
   edge_df$direction <- ifelse(edge_df$pcor > 0, "Positive", "Negative")
 
   if (nrow(edge_df) == 0) {
-    message("No edges above min_pcor for: ", title)
+    message("No edges above minPcor for: ", title)
     return(invisible(NULL))
   }
 
-  groups <- resolve_node_groups(vars, node_groups)
+  groups <- resolve_node_groups(vars, nodeGroups)
+  label_vector <- format_node_labels(vars)
   node_df <- data.frame(
     name = vars,
     group = groups,
-    label = format_node_labels(vars),
+    label = label_vector,
     stringsAsFactors = FALSE
   )
 
-  g <- tidygraph::tbl_graph(nodes = node_df, edges = edge_df, directed = FALSE)
+  graph_object <- tidygraph::tbl_graph(nodes = node_df, edges = edge_df, directed = FALSE)
   palette <- default_group_palette(node_df$group)
 
   set.seed(seed)
-  p <- ggraph(g, layout = "fr") +
+  network_plot <- ggraph(graph_object, layout = "fr") +
     geom_edge_link(
       aes(width = abs_pcor, alpha = abs_pcor, colour = direction),
       lineend = "round"
@@ -132,8 +133,8 @@ plot_copula_network <- function(result,
     labs(
       title = title,
       subtitle = bquote(
-        n == .(result$n) ~ "|" ~ p == .(length(result$kept_cols)) ~
-          "|" ~ edges == .(nrow(edge_df)) ~ "|" ~ lambda == .(round(result$lambda_opt, 4))
+        n == .(result$n) ~ "|" ~ p == .(length(result$keptCols)) ~
+          "|" ~ edges == .(nrow(edge_df)) ~ "|" ~ lambda == .(round(result$lambdaOpt, 4))
       )
     ) +
     theme_graph(base_family = "sans", base_size = 11) +
@@ -143,8 +144,8 @@ plot_copula_network <- function(result,
       legend.position = "right"
     )
 
-  if (isTRUE(print_plot)) {
-    print(p)
+  if (isTRUE(printPlot)) {
+    print(network_plot)
   }
-  invisible(p)
+  invisible(network_plot)
 }

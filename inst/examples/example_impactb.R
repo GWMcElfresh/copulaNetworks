@@ -35,12 +35,12 @@ if (!exists("bn_data_imp")) {
   )
 }
 
-prep <- prepare_copula_data(
+prep <- PrepareCopulaData(
   data = bn_data_imp,
-  id_cols = c("SubjectId", "cDNA_ID"),
-  strata_cols = c("Vaccine", "Timepoint", "Tissue", "Challenge"),
-  exclude_cols = c("CFU_Homogenate", "LungPathScore", "Protection"),
-  strata_specs = list(
+  idCols = c("SubjectId", "cDNA_ID"),
+  strataCols = c("Vaccine", "Timepoint", "Tissue", "Challenge"),
+  excludeCols = c("CFU_Homogenate", "LungPathScore", "Protection"),
+  strataSpecs = list(
     cohort = list(
       mutate = quote(Cohort = dplyr::case_when(
         grepl("BCG", Vaccine) ~ "BCG",
@@ -49,68 +49,68 @@ prep <- prepare_copula_data(
         TRUE ~ "Other"
       )),
       group_by = "Cohort",
-      min_n = 10
+      minN = 10
     ),
     late = list(
       filter = quote(Timepoint %in% c("Day 21", "Day 28")),
       group_by = c("Cohort", "Timepoint"),
-      name_sep = " | ",
-      min_n = 10
+      nameSep = " | ",
+      minN = 10
     )
   ),
-  out_dir = "checkpoints/copula_impactb"
+  outDir = "checkpoints/copula_impactb"
 )
 
 # ---------------------------------------------------------------------------
 # Step 1: fit copula models
 # ---------------------------------------------------------------------------
-fits <- fit_copula_strata(
+fits <- FitCopulaStrata(
   prep,
   method = "stars",
   nlambda = 40,
-  stars_thresh = 0.1,
-  min_n = 10,
-  include_full = TRUE,
-  out_dir = "checkpoints/copula_impactb"
+  starsThresh = 0.1,
+  minN = 10,
+  includeFull = TRUE,
+  outDir = "checkpoints/copula_impactb"
 )
 
 # ---------------------------------------------------------------------------
 # Step 2: single-stratum diagnostics
 # ---------------------------------------------------------------------------
-plot_all_strata(
+PlotAllStrata(
   fits,
-  out_dir = "checkpoints/copula_impactb/figures",
-  node_groups = impactb_node_groups,
-  min_pcor = 0.01
+  outDir = "checkpoints/copula_impactb/figures",
+  nodeGroups = impactb_node_groups,
+  minPcor = 0.01
 )
 
 # ---------------------------------------------------------------------------
 # Step 3: structure comparison across strata
 # ---------------------------------------------------------------------------
 if (all(c("cohort::BCG", "cohort::RhCMV-TB") %in% names(fits$fits))) {
-  cmp_bcg_rhcmv <- compare_two_strata(
+  cmp_bcg_rhcmv <- CompareTwoStrata(
     fits$fits[["cohort::BCG"]],
     fits$fits[["cohort::RhCMV-TB"]],
-    label_a = "BCG",
-    label_b = "RhCMV-TB",
-    matrices = c("pcor", "copula_cor")
+    labelA = "BCG",
+    labelB = "RhCMV-TB",
+    matrices = c("pcor", "copulaCor")
   )
 
-  plot_stratum_comparison(
+  PlotStratumComparison(
     cmp_bcg_rhcmv,
-    out_dir = "checkpoints/copula_impactb/comparisons/BCG_vs_RhCMV-TB"
+    outDir = "checkpoints/copula_impactb/comparisons/BCG_vs_RhCMV-TB"
   )
 }
 
 # ---------------------------------------------------------------------------
 # One-call alternative
 # ---------------------------------------------------------------------------
-# result <- run_copula_pipeline(
+# result <- RunCopulaPipeline(
 #   data = bn_data_imp,
-#   id_cols = c("SubjectId", "cDNA_ID"),
-#   strata_cols = c("Vaccine", "Timepoint", "Tissue", "Challenge"),
-#   exclude_cols = c("CFU_Homogenate", "LungPathScore", "Protection"),
-#   strata_specs = list(
+#   idCols = c("SubjectId", "cDNA_ID"),
+#   strataCols = c("Vaccine", "Timepoint", "Tissue", "Challenge"),
+#   excludeCols = c("CFU_Homogenate", "LungPathScore", "Protection"),
+#   strataSpecs = list(
 #     cohort = list(
 #       mutate = quote(Cohort = dplyr::case_when(
 #         grepl("BCG", Vaccine) ~ "BCG",
@@ -119,10 +119,10 @@ if (all(c("cohort::BCG", "cohort::RhCMV-TB") %in% names(fits$fits))) {
 #         TRUE ~ "Other"
 #       )),
 #       group_by = "Cohort",
-#       min_n = 10
+#       minN = 10
 #     )
 #   ),
-#   compare_pairs = list(c("cohort::BCG", "cohort::RhCMV-TB")),
-#   out_dir = "checkpoints/copula_impactb_pipeline",
-#   node_groups = impactb_node_groups
+#   comparePairs = list(c("cohort::BCG", "cohort::RhCMV-TB")),
+#   outDir = "checkpoints/copula_impactb_pipeline",
+#   nodeGroups = impactb_node_groups
 # )

@@ -17,91 +17,92 @@ make_synthetic_data <- function(n = 60, seed = 42) {
   )
 }
 
-test_that("nonparanormal_transform preserves dimensions", {
-  X <- matrix(rnorm(50), ncol = 5)
-  colnames(X) <- paste0("v", 1:5)
-  Z <- nonparanormal_transform(X)
-  expect_equal(dim(Z), dim(X))
-  expect_equal(colnames(Z), colnames(X))
+test_that("NonparanormalTransform preserves dimensions", {
+  input_matrix <- matrix(rnorm(50), ncol = 5)
+  colnames(input_matrix) <- paste0("v", 1:5)
+  quantile_matrix <- NonparanormalTransform(input_matrix)
+  expect_equal(dim(quantile_matrix), dim(input_matrix))
+  expect_equal(colnames(quantile_matrix), colnames(input_matrix))
 })
 
-test_that("fit_stratum_copula returns symmetric pcor with unit diagonal", {
+test_that("FitStratumCopula returns symmetric pcor with unit diagonal", {
   dat <- make_synthetic_data()
-  res <- fit_stratum_copula(dat, node_cols = paste0("node", 1:8), nlambda = 10)
+  res <- FitStratumCopula(dat, nodeCols = paste0("node", 1:8), nlambda = 10)
   expect_false(is.null(res))
-  expect_equal(dim(res$pcor), c(length(res$kept_cols), length(res$kept_cols)))
+  expect_equal(dim(res$pcor), c(length(res$keptCols), length(res$keptCols)))
   expect_equal(unname(diag(res$pcor)), rep(1, ncol(res$pcor)), tolerance = 1e-6)
   expect_equal(res$pcor, t(res$pcor), tolerance = 1e-6)
 })
 
-test_that("build_strata respects filter and min_n", {
+test_that("BuildStrata respects filter and minN", {
   dat <- make_synthetic_data()
-  strata <- build_strata(
+  strata <- BuildStrata(
     dat,
     spec = list(
       filter = quote(stratum == "A"),
       group_by = "stratum",
-      min_n = 5
+      minN = 5
     )
   )
   expect_equal(length(strata), 1)
   expect_equal(nrow(strata[[1]]), 30)
 })
 
-test_that("prepare_copula_data builds strata from specs", {
+test_that("PrepareCopulaData builds strata from specs", {
   dat <- make_synthetic_data()
-  prep <- prepare_copula_data(
+  prep <- PrepareCopulaData(
     data = dat,
-    id_cols = "SubjectId",
-    strata_cols = c("stratum", "Vaccine"),
-    node_cols = paste0("node", 1:8),
-    strata_specs = list(
-      by_stratum = list(stratum_col = "stratum")
+    idCols = "SubjectId",
+    strataCols = c("stratum", "Vaccine"),
+    nodeCols = paste0("node", 1:8),
+    strataSpecs = list(
+      by_stratum = list(stratumCol = "stratum")
     )
   )
   expect_equal(length(prep$strata), 2)
-  expect_equal(length(prep$node_cols), 8)
+  expect_equal(length(prep$nodeCols), 8)
 })
 
-test_that("fit_copula_strata fits all strata", {
+test_that("FitCopulaStrata fits all strata", {
   dat <- make_synthetic_data()
-  prep <- prepare_copula_data(
+  prep <- PrepareCopulaData(
     data = dat,
-    id_cols = "SubjectId",
-    strata_cols = c("stratum", "Vaccine"),
-    node_cols = paste0("node", 1:8),
-    strata_specs = list(by_stratum = list(stratum_col = "stratum"))
+    idCols = "SubjectId",
+    strataCols = c("stratum", "Vaccine"),
+    nodeCols = paste0("node", 1:8),
+    strataSpecs = list(by_stratum = list(stratumCol = "stratum"))
   )
-  fits <- fit_copula_strata(prep, nlambda = 10, min_n = 10)
+  fits <- FitCopulaStrata(prep, nlambda = 10, minN = 10)
   expect_equal(length(fits$fits), 2)
 })
 
-test_that("compare_two_strata returns both matrix types", {
+test_that("CompareTwoStrata returns both matrix types", {
   dat <- make_synthetic_data()
-  prep <- prepare_copula_data(
+  prep <- PrepareCopulaData(
     data = dat,
-    id_cols = "SubjectId",
-    strata_cols = c("stratum", "Vaccine"),
-    node_cols = paste0("node", 1:8),
-    strata_specs = list(by_stratum = list(stratum_col = "stratum"))
+    idCols = "SubjectId",
+    strataCols = c("stratum", "Vaccine"),
+    nodeCols = paste0("node", 1:8),
+    strataSpecs = list(by_stratum = list(stratumCol = "stratum"))
   )
-  fits <- fit_copula_strata(prep, nlambda = 10, min_n = 10)
-  cmp <- compare_two_strata(
+  fits <- FitCopulaStrata(prep, nlambda = 10, minN = 10)
+  cmp <- CompareTwoStrata(
     fits$fits[["by_stratum::A"]],
     fits$fits[["by_stratum::B"]],
-    label_a = "A",
-    label_b = "B"
+    labelA = "A",
+    labelB = "B"
   )
   expect_true("pcor" %in% names(cmp))
-  expect_true("copula_cor" %in% names(cmp))
-  expect_true(all(c("value_a", "value_b", "delta", "abs_delta") %in% names(cmp$pcor)))
+  expect_true("copulaCor" %in% names(cmp))
+  expect_true(all(c("valueA", "valueB", "delta", "absDelta") %in% names(cmp$pcor)))
+  expect_s3_class(cmp, "CopulaStratumComparison")
 })
 
 test_that("checkpoint save and load roundtrip", {
   tmp <- tempfile("copula_ckpt")
   dir.create(tmp)
-  obj <- list(x = 1:3)
-  save_checkpoint(obj, tmp, filename = "test.rds")
-  loaded <- load_checkpoint(tmp, filename = "test.rds")
-  expect_equal(loaded, obj)
+  checkpoint_object <- list(x = 1:3)
+  SaveCheckpoint(checkpoint_object, tmp, filename = "test.rds")
+  loaded <- LoadCheckpoint(tmp, filename = "test.rds")
+  expect_equal(loaded, checkpoint_object)
 })
