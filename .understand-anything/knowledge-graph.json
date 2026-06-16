@@ -1,0 +1,1633 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "copulaNetworks",
+    "languages": [
+      "markdown",
+      "r",
+      "unknown"
+    ],
+    "frameworks": [
+      "dplyr",
+      "ggplot2",
+      "ggraph",
+      "igraph",
+      "testthat",
+      "tidygraph"
+    ],
+    "description": "Fit and visualize stratified nonparanormal Gaussian copula graphical models using graphical lasso (glasso) with StARS model selection. Supports declarative stratification, single-stratum diagnostics, and cross-stratum structure comparison.",
+    "analyzedAt": "2026-06-16T00:05:59.073651+00:00",
+    "gitCommitHash": "nogit"
+  },
+  "nodes": [
+    {
+      "id": "file:.understand-anything/.understandignore",
+      "type": "file",
+      "name": ".understandignore",
+      "filePath": ".understand-anything/.understandignore",
+      "summary": "Ignore patterns for Understand-Anything analysis, using gitignore-style globs to exclude tests and other paths from codebase scanning.",
+      "tags": [
+        "configuration",
+        "analysis-exclusion",
+        "gitignore-style"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:DESCRIPTION",
+      "type": "file",
+      "name": "DESCRIPTION",
+      "filePath": "DESCRIPTION",
+      "summary": "R package metadata declaring copulaNetworks v0.1.0, MIT license, and dependencies on huge, tidygraph, ggraph, ggplot2, and dplyr for copula graphical modeling.",
+      "tags": [
+        "configuration",
+        "package-metadata",
+        "dependencies"
+      ],
+      "complexity": "simple",
+      "languageNotes": "Standard R package DESCRIPTION with Imports and Suggests for glasso (huge) and visualization stacks."
+    },
+    {
+      "id": "file:inst/examples/example_impactb.R",
+      "type": "file",
+      "name": "example_impactb.R",
+      "filePath": "inst/examples/example_impactb.R",
+      "summary": "End-to-end ImpacTB workflow example demonstrating prepare, fit, plot, and cross-stratum comparison using declarative strata_specs and custom node group styling.",
+      "tags": [
+        "example",
+        "workflow",
+        "stratification",
+        "visualization"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:LICENSE.md",
+      "type": "document",
+      "name": "LICENSE.md",
+      "filePath": "LICENSE.md",
+      "summary": "MIT license text granting permissive use, modification, and distribution of the copulaNetworks software.",
+      "tags": [
+        "documentation",
+        "license",
+        "mit"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:NAMESPACE",
+      "type": "file",
+      "name": "NAMESPACE",
+      "filePath": "NAMESPACE",
+      "summary": "Package namespace manifest exporting 17 public functions and declaring selective imports from dplyr, ggplot2, ggraph, rlang, stats, tidyr, and tidygraph.",
+      "tags": [
+        "configuration",
+        "exports",
+        "namespace"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:R/compare.R",
+      "type": "file",
+      "name": "compare.R",
+      "filePath": "R/compare.R",
+      "summary": "Cross-stratum comparison utilities that extract edge lists and pairwise matrix differences between fitted copula models for pcor and copula correlation.",
+      "tags": [
+        "comparison",
+        "stratification",
+        "partial-correlation",
+        "service"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:R/fit.R",
+      "type": "file",
+      "name": "fit.R",
+      "filePath": "R/fit.R",
+      "summary": "Core model fitting layer applying nonparanormal transformation and graphical lasso via huge with StARS or EBIC lambda selection across strata.",
+      "tags": [
+        "model-fitting",
+        "glasso",
+        "nonparanormal",
+        "service"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:R/io.R",
+      "type": "file",
+      "name": "io.R",
+      "filePath": "R/io.R",
+      "summary": "Checkpoint persistence helpers for saving and loading pipeline intermediate results as RDS files.",
+      "tags": [
+        "io",
+        "checkpoint",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:R/pipeline.R",
+      "type": "file",
+      "name": "pipeline.R",
+      "filePath": "R/pipeline.R",
+      "summary": "High-level orchestrator wrapping prepare, fit, diagnostic plotting, and optional pairwise stratum comparisons into a single run_copula_pipeline call.",
+      "tags": [
+        "entry-point",
+        "pipeline",
+        "orchestration"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:R/plot_compare.R",
+      "type": "file",
+      "name": "plot_compare.R",
+      "filePath": "R/plot_compare.R",
+      "summary": "ggplot2-based cross-stratum comparison plots including scatter and differential bar charts with optional ggrepel edge labeling.",
+      "tags": [
+        "visualization",
+        "comparison",
+        "ggplot2"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:R/plot_heatmaps.R",
+      "type": "file",
+      "name": "plot_heatmaps.R",
+      "filePath": "R/plot_heatmaps.R",
+      "summary": "Single-stratum diagnostic plotting combining network graphs, copula correlation heatmaps, and partial correlation heatmaps with PNG/PDF export.",
+      "tags": [
+        "visualization",
+        "heatmap",
+        "diagnostics"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:R/plot_network.R",
+      "type": "file",
+      "name": "plot_network.R",
+      "filePath": "R/plot_network.R",
+      "summary": "ggraph network visualization of glasso-selected partial correlation edges with node grouping, label formatting, and FR layout.",
+      "tags": [
+        "visualization",
+        "network-graph",
+        "ggraph"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:R/prepare.R",
+      "type": "file",
+      "name": "prepare.R",
+      "filePath": "R/prepare.R",
+      "summary": "Data preparation step validating column roles, resolving node variables, and building named strata from declarative recipes.",
+      "tags": [
+        "data-preparation",
+        "stratification",
+        "validation"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:R/stratify.R",
+      "type": "file",
+      "name": "stratify.R",
+      "filePath": "R/stratify.R",
+      "summary": "Declarative stratum builder supporting mutate, filter, group_by, and stratum_col recipes with minimum sample size enforcement.",
+      "tags": [
+        "stratification",
+        "data-transformation",
+        "utility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:tests/testthat.R",
+      "type": "file",
+      "name": "testthat.R",
+      "filePath": "tests/testthat.R",
+      "summary": "testthat entry point that loads the copulaNetworks package and runs the test_check suite.",
+      "tags": [
+        "test",
+        "entry-point"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:tests/testthat/test-core.R",
+      "type": "file",
+      "name": "test-core.R",
+      "filePath": "tests/testthat/test-core.R",
+      "summary": "Core unit tests covering nonparanormal transform, stratum fitting, data preparation, cross-stratum comparison, and checkpoint roundtrips.",
+      "tags": [
+        "test",
+        "unit-test",
+        "core"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:R/compare.R:extract_edges",
+      "type": "function",
+      "name": "extract_edges",
+      "filePath": "R/compare.R",
+      "lineRange": [
+        7,
+        32
+      ],
+      "summary": "Extracts adjacency edges from a fit result into a data frame with from, to, pcor, stratum, and canonical edge labels.",
+      "tags": [
+        "utility",
+        "edge-extraction",
+        "comparison"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:R/compare.R:extract_pairwise_values",
+      "type": "function",
+      "name": "extract_pairwise_values",
+      "filePath": "R/compare.R",
+      "lineRange": [
+        36,
+        67
+      ],
+      "summary": "Flattens upper-triangular matrix pairs into a data frame, optionally zeroing non-adjacent entries for pcor comparisons.",
+      "tags": [
+        "utility",
+        "matrix-flattening",
+        "comparison"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:R/compare.R:compare_pairwise_matrices",
+      "type": "function",
+      "name": "compare_pairwise_matrices",
+      "filePath": "R/compare.R",
+      "lineRange": [
+        81,
+        149
+      ],
+      "summary": "Joins pairwise values from two stratum fits, computes deltas, and classifies direction labels for pcor or copula_cor matrices.",
+      "tags": [
+        "comparison",
+        "partial-correlation",
+        "stratification"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:R/compare.R:compare_two_strata",
+      "type": "function",
+      "name": "compare_two_strata",
+      "filePath": "R/compare.R",
+      "lineRange": [
+        163,
+        182
+      ],
+      "summary": "Runs compare_pairwise_matrices for multiple matrix types and returns a copula_stratum_comparison list object.",
+      "tags": [
+        "comparison",
+        "stratification",
+        "api-handler"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:R/fit.R:nonparanormal_transform",
+      "type": "function",
+      "name": "nonparanormal_transform",
+      "filePath": "R/fit.R",
+      "lineRange": [
+        9,
+        17
+      ],
+      "summary": "Maps each column to Gaussian copula scores via rank-based normal quantile transformation.",
+      "tags": [
+        "transformation",
+        "nonparanormal",
+        "preprocessing"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:R/fit.R:fit_stratum_copula",
+      "type": "function",
+      "name": "fit_stratum_copula",
+      "filePath": "R/fit.R",
+      "lineRange": [
+        29,
+        78
+      ],
+      "summary": "Fits a single-stratum nonparanormal graphical model using huge glasso with StARS or EBIC selection, returning precision, pcor, and adjacency.",
+      "tags": [
+        "model-fitting",
+        "glasso",
+        "nonparanormal"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:R/fit.R:fit_copula_strata",
+      "type": "function",
+      "name": "fit_copula_strata",
+      "filePath": "R/fit.R",
+      "lineRange": [
+        91,
+        151
+      ],
+      "summary": "Iterates prepared strata, fitting copula models per stratum with min_n filtering and optional full-dataset baseline fit.",
+      "tags": [
+        "model-fitting",
+        "stratification",
+        "batch-processing"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:R/io.R:save_checkpoint",
+      "type": "function",
+      "name": "save_checkpoint",
+      "filePath": "R/io.R",
+      "lineRange": [
+        8,
+        16
+      ],
+      "summary": "Creates output directory if needed and saves an R object as an RDS checkpoint file.",
+      "tags": [
+        "io",
+        "checkpoint",
+        "persistence"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:R/io.R:load_checkpoint",
+      "type": "function",
+      "name": "load_checkpoint",
+      "filePath": "R/io.R",
+      "lineRange": [
+        24,
+        30
+      ],
+      "summary": "Loads an RDS checkpoint from a directory, stopping with a clear error if the file is missing.",
+      "tags": [
+        "io",
+        "checkpoint",
+        "persistence"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:R/pipeline.R:run_copula_pipeline",
+      "type": "function",
+      "name": "run_copula_pipeline",
+      "filePath": "R/pipeline.R",
+      "lineRange": [
+        24,
+        117
+      ],
+      "summary": "End-to-end pipeline orchestrating prepare, fit, diagnostic plots, optional pairwise comparisons, and checkpoint persistence.",
+      "tags": [
+        "entry-point",
+        "pipeline",
+        "orchestration"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:R/plot_compare.R:copula_plot_theme",
+      "type": "function",
+      "name": "copula_plot_theme",
+      "filePath": "R/plot_compare.R",
+      "lineRange": [
+        3,
+        16
+      ],
+      "summary": "Returns a white-background ggplot theme preferring egg::theme_article with theme_bw fallback.",
+      "tags": [
+        "visualization",
+        "ggplot2",
+        "theme"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:R/plot_compare.R:format_comparison_edge_label",
+      "type": "function",
+      "name": "format_comparison_edge_label",
+      "filePath": "R/plot_compare.R",
+      "lineRange": [
+        20,
+        33
+      ],
+      "summary": "Shortens edge pair labels for comparison plots by stripping namespace prefixes after double underscores.",
+      "tags": [
+        "visualization",
+        "label-formatting",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:R/plot_compare.R:select_comparison_labels",
+      "type": "function",
+      "name": "select_comparison_labels",
+      "filePath": "R/plot_compare.R",
+      "lineRange": [
+        37,
+        56
+      ],
+      "summary": "Ranks comparison pairs by extremeness score and selects up to max_labels for scatter plot annotation.",
+      "tags": [
+        "visualization",
+        "label-selection",
+        "comparison"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:R/plot_compare.R:add_quadrant_label_nudges",
+      "type": "function",
+      "name": "add_quadrant_label_nudges",
+      "filePath": "R/plot_compare.R",
+      "lineRange": [
+        60,
+        73
+      ],
+      "summary": "Adds alternating nudge offsets to repel comparison scatter labels toward Q2/Q4 quadrants.",
+      "tags": [
+        "visualization",
+        "label-positioning",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:R/plot_compare.R:comparison_scatter_plot",
+      "type": "function",
+      "name": "comparison_scatter_plot",
+      "filePath": "R/plot_compare.R",
+      "lineRange": [
+        77,
+        147
+      ],
+      "summary": "Builds a scatter plot comparing pairwise values across two strata with direction coloring and optional ggrepel labels.",
+      "tags": [
+        "visualization",
+        "comparison",
+        "ggplot2"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:R/plot_compare.R:comparison_bar_plot",
+      "type": "function",
+      "name": "comparison_bar_plot",
+      "filePath": "R/plot_compare.R",
+      "lineRange": [
+        151,
+        178
+      ],
+      "summary": "Creates a dodged bar chart of differential pairs exceeding a delta threshold between two strata.",
+      "tags": [
+        "visualization",
+        "comparison",
+        "bar-chart"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:R/plot_compare.R:plot_stratum_comparison",
+      "type": "function",
+      "name": "plot_stratum_comparison",
+      "filePath": "R/plot_compare.R",
+      "lineRange": [
+        192,
+        261
+      ],
+      "summary": "Generates and optionally saves scatter and bar comparison plots for each matrix in a compare_two_strata result.",
+      "tags": [
+        "visualization",
+        "comparison",
+        "api-handler"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:R/plot_heatmaps.R:plot_copula_cor_heatmap",
+      "type": "function",
+      "name": "plot_copula_cor_heatmap",
+      "filePath": "R/plot_heatmaps.R",
+      "lineRange": [
+        8,
+        26
+      ],
+      "summary": "Renders a clustered pheatmap of the copula correlation matrix with symmetric blue-white-red palette.",
+      "tags": [
+        "visualization",
+        "heatmap",
+        "correlation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:R/plot_heatmaps.R:plot_pcor_heatmap",
+      "type": "function",
+      "name": "plot_pcor_heatmap",
+      "filePath": "R/plot_heatmaps.R",
+      "lineRange": [
+        46,
+        70
+      ],
+      "summary": "Renders a clustered pheatmap of the glasso partial correlation matrix with data-driven symmetric breaks.",
+      "tags": [
+        "visualization",
+        "heatmap",
+        "partial-correlation"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:R/plot_heatmaps.R:copula_ggsave",
+      "type": "function",
+      "name": "copula_ggsave",
+      "filePath": "R/plot_heatmaps.R",
+      "lineRange": [
+        74,
+        92
+      ],
+      "summary": "Saves a ggplot object to both PNG and PDF with white background at specified dimensions.",
+      "tags": [
+        "visualization",
+        "export",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:R/plot_heatmaps.R:save_grob",
+      "type": "function",
+      "name": "save_grob",
+      "filePath": "R/plot_heatmaps.R",
+      "lineRange": [
+        96,
+        112
+      ],
+      "summary": "Exports a grid grob to PNG and PDF using grDevices and grid.draw.",
+      "tags": [
+        "visualization",
+        "export",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:R/plot_heatmaps.R:plot_stratum_diagnostics",
+      "type": "function",
+      "name": "plot_stratum_diagnostics",
+      "filePath": "R/plot_heatmaps.R",
+      "lineRange": [
+        127,
+        182
+      ],
+      "summary": "Combines network, copula correlation, and partial correlation plots for a single fitted stratum with optional file export.",
+      "tags": [
+        "visualization",
+        "diagnostics",
+        "api-handler"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:R/plot_heatmaps.R:plot_all_strata",
+      "type": "function",
+      "name": "plot_all_strata",
+      "filePath": "R/plot_heatmaps.R",
+      "lineRange": [
+        191,
+        210
+      ],
+      "summary": "Iterates all fitted strata and calls plot_stratum_diagnostics into per-stratum subdirectories.",
+      "tags": [
+        "visualization",
+        "diagnostics",
+        "batch-processing"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:R/plot_network.R:resolve_node_groups",
+      "type": "function",
+      "name": "resolve_node_groups",
+      "filePath": "R/plot_network.R",
+      "lineRange": [
+        8,
+        21
+      ],
+      "summary": "Resolves node group labels from a named vector, function, or defaults all nodes to Node.",
+      "tags": [
+        "visualization",
+        "node-grouping",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:R/plot_network.R:default_group_palette",
+      "type": "function",
+      "name": "default_group_palette",
+      "filePath": "R/plot_network.R",
+      "lineRange": [
+        25,
+        43
+      ],
+      "summary": "Returns a color palette for known biological node groups with automatic extension for unknown groups.",
+      "tags": [
+        "visualization",
+        "color-palette",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:R/plot_network.R:plot_copula_network",
+      "type": "function",
+      "name": "plot_copula_network",
+      "filePath": "R/plot_network.R",
+      "lineRange": [
+        65,
+        152
+      ],
+      "summary": "Builds a ggraph FR-layout network from adjacency and partial correlations with edge width, color, and node group styling.",
+      "tags": [
+        "visualization",
+        "network-graph",
+        "api-handler"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:R/prepare.R:resolve_node_cols",
+      "type": "function",
+      "name": "resolve_node_cols",
+      "filePath": "R/prepare.R",
+      "lineRange": [
+        10,
+        37
+      ],
+      "summary": "Validates and resolves endogenous node columns, auto-detecting numeric columns when not explicitly provided.",
+      "tags": [
+        "validation",
+        "column-resolution",
+        "utility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:R/prepare.R:prepare_copula_data",
+      "type": "function",
+      "name": "prepare_copula_data",
+      "filePath": "R/prepare.R",
+      "lineRange": [
+        57,
+        115
+      ],
+      "summary": "Validates input data, resolves node columns, builds strata from declarative specs, and optionally checkpoints prep.rds.",
+      "tags": [
+        "data-preparation",
+        "stratification",
+        "api-handler"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:R/stratify.R:build_strata",
+      "type": "function",
+      "name": "build_strata",
+      "filePath": "R/stratify.R",
+      "lineRange": [
+        16,
+        86
+      ],
+      "summary": "Applies mutate, filter, and group_by or stratum_col recipes to split data into named strata with min_n filtering.",
+      "tags": [
+        "stratification",
+        "data-transformation",
+        "api-handler"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:inst/examples/example_impactb.R:impactb_node_groups",
+      "type": "function",
+      "name": "impactb_node_groups",
+      "filePath": "inst/examples/example_impactb.R",
+      "lineRange": [
+        15,
+        24
+      ],
+      "summary": "ImpacTB-specific node group classifier mapping variable name patterns to biological categories for network coloring.",
+      "tags": [
+        "example",
+        "node-grouping",
+        "domain-specific"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:tests/testthat/test-core.R:make_synthetic_data",
+      "type": "function",
+      "name": "make_synthetic_data",
+      "filePath": "tests/testthat/test-core.R",
+      "lineRange": [
+        1,
+        18
+      ],
+      "summary": "Test fixture generator creating a two-stratum synthetic data frame with eight numeric node columns.",
+      "tags": [
+        "test",
+        "fixture",
+        "synthetic-data"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:R/compare.R",
+      "target": "function:R/compare.R:extract_edges",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/compare.R",
+      "target": "function:R/compare.R:extract_pairwise_values",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/compare.R",
+      "target": "function:R/compare.R:compare_pairwise_matrices",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/compare.R",
+      "target": "function:R/compare.R:compare_two_strata",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/fit.R",
+      "target": "function:R/fit.R:nonparanormal_transform",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/fit.R",
+      "target": "function:R/fit.R:fit_stratum_copula",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/fit.R",
+      "target": "function:R/fit.R:fit_copula_strata",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/io.R",
+      "target": "function:R/io.R:save_checkpoint",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/io.R",
+      "target": "function:R/io.R:load_checkpoint",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/pipeline.R",
+      "target": "function:R/pipeline.R:run_copula_pipeline",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/plot_compare.R",
+      "target": "function:R/plot_compare.R:copula_plot_theme",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/plot_compare.R",
+      "target": "function:R/plot_compare.R:format_comparison_edge_label",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/plot_compare.R",
+      "target": "function:R/plot_compare.R:select_comparison_labels",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/plot_compare.R",
+      "target": "function:R/plot_compare.R:add_quadrant_label_nudges",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/plot_compare.R",
+      "target": "function:R/plot_compare.R:comparison_scatter_plot",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/plot_compare.R",
+      "target": "function:R/plot_compare.R:comparison_bar_plot",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/plot_compare.R",
+      "target": "function:R/plot_compare.R:plot_stratum_comparison",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/plot_heatmaps.R",
+      "target": "function:R/plot_heatmaps.R:plot_copula_cor_heatmap",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/plot_heatmaps.R",
+      "target": "function:R/plot_heatmaps.R:plot_pcor_heatmap",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/plot_heatmaps.R",
+      "target": "function:R/plot_heatmaps.R:copula_ggsave",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/plot_heatmaps.R",
+      "target": "function:R/plot_heatmaps.R:save_grob",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/plot_heatmaps.R",
+      "target": "function:R/plot_heatmaps.R:plot_stratum_diagnostics",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/plot_heatmaps.R",
+      "target": "function:R/plot_heatmaps.R:plot_all_strata",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/plot_network.R",
+      "target": "function:R/plot_network.R:resolve_node_groups",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/plot_network.R",
+      "target": "function:R/plot_network.R:default_group_palette",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/plot_network.R",
+      "target": "function:R/plot_network.R:plot_copula_network",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/prepare.R",
+      "target": "function:R/prepare.R:resolve_node_cols",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/prepare.R",
+      "target": "function:R/prepare.R:prepare_copula_data",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/stratify.R",
+      "target": "function:R/stratify.R:build_strata",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:inst/examples/example_impactb.R",
+      "target": "function:inst/examples/example_impactb.R:impactb_node_groups",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:tests/testthat/test-core.R",
+      "target": "function:tests/testthat/test-core.R:make_synthetic_data",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:R/compare.R",
+      "target": "function:R/compare.R:extract_edges",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:R/compare.R",
+      "target": "function:R/compare.R:compare_pairwise_matrices",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:R/compare.R",
+      "target": "function:R/compare.R:compare_two_strata",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:R/fit.R",
+      "target": "function:R/fit.R:nonparanormal_transform",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:R/fit.R",
+      "target": "function:R/fit.R:fit_stratum_copula",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:R/fit.R",
+      "target": "function:R/fit.R:fit_copula_strata",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:R/io.R",
+      "target": "function:R/io.R:save_checkpoint",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:R/io.R",
+      "target": "function:R/io.R:load_checkpoint",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:R/pipeline.R",
+      "target": "function:R/pipeline.R:run_copula_pipeline",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:R/plot_compare.R",
+      "target": "function:R/plot_compare.R:plot_stratum_comparison",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:R/plot_heatmaps.R",
+      "target": "function:R/plot_heatmaps.R:plot_copula_cor_heatmap",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:R/plot_heatmaps.R",
+      "target": "function:R/plot_heatmaps.R:plot_pcor_heatmap",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:R/plot_heatmaps.R",
+      "target": "function:R/plot_heatmaps.R:plot_stratum_diagnostics",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:R/plot_heatmaps.R",
+      "target": "function:R/plot_heatmaps.R:plot_all_strata",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:R/plot_network.R",
+      "target": "function:R/plot_network.R:plot_copula_network",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:R/prepare.R",
+      "target": "function:R/prepare.R:prepare_copula_data",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:R/stratify.R",
+      "target": "function:R/stratify.R:build_strata",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/compare.R:compare_pairwise_matrices",
+      "target": "function:R/compare.R:extract_pairwise_values",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/compare.R:compare_two_strata",
+      "target": "function:R/compare.R:compare_pairwise_matrices",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/fit.R:fit_stratum_copula",
+      "target": "function:R/fit.R:nonparanormal_transform",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/fit.R:fit_copula_strata",
+      "target": "function:R/fit.R:fit_stratum_copula",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/fit.R:fit_copula_strata",
+      "target": "function:R/io.R:save_checkpoint",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/prepare.R:prepare_copula_data",
+      "target": "function:R/prepare.R:resolve_node_cols",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/prepare.R:prepare_copula_data",
+      "target": "function:R/stratify.R:build_strata",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/prepare.R:prepare_copula_data",
+      "target": "function:R/io.R:save_checkpoint",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/pipeline.R:run_copula_pipeline",
+      "target": "function:R/prepare.R:prepare_copula_data",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/pipeline.R:run_copula_pipeline",
+      "target": "function:R/fit.R:fit_copula_strata",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/pipeline.R:run_copula_pipeline",
+      "target": "function:R/plot_heatmaps.R:plot_all_strata",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/pipeline.R:run_copula_pipeline",
+      "target": "function:R/compare.R:compare_two_strata",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/pipeline.R:run_copula_pipeline",
+      "target": "function:R/plot_compare.R:plot_stratum_comparison",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/pipeline.R:run_copula_pipeline",
+      "target": "function:R/io.R:save_checkpoint",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/plot_compare.R:plot_stratum_comparison",
+      "target": "function:R/plot_compare.R:comparison_scatter_plot",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/plot_compare.R:plot_stratum_comparison",
+      "target": "function:R/plot_compare.R:comparison_bar_plot",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/plot_compare.R:plot_stratum_comparison",
+      "target": "function:R/plot_heatmaps.R:copula_ggsave",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/plot_compare.R:comparison_scatter_plot",
+      "target": "function:R/plot_compare.R:select_comparison_labels",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/plot_compare.R:comparison_scatter_plot",
+      "target": "function:R/plot_compare.R:copula_plot_theme",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/plot_compare.R:select_comparison_labels",
+      "target": "function:R/plot_compare.R:format_comparison_edge_label",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/plot_compare.R:select_comparison_labels",
+      "target": "function:R/plot_compare.R:add_quadrant_label_nudges",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/plot_compare.R:comparison_bar_plot",
+      "target": "function:R/plot_compare.R:copula_plot_theme",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/plot_heatmaps.R:plot_stratum_diagnostics",
+      "target": "function:R/plot_network.R:plot_copula_network",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/plot_heatmaps.R:plot_stratum_diagnostics",
+      "target": "function:R/plot_heatmaps.R:plot_copula_cor_heatmap",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/plot_heatmaps.R:plot_stratum_diagnostics",
+      "target": "function:R/plot_heatmaps.R:plot_pcor_heatmap",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/plot_heatmaps.R:plot_stratum_diagnostics",
+      "target": "function:R/plot_heatmaps.R:copula_ggsave",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/plot_heatmaps.R:plot_stratum_diagnostics",
+      "target": "function:R/plot_heatmaps.R:save_grob",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/plot_heatmaps.R:plot_all_strata",
+      "target": "function:R/plot_heatmaps.R:plot_stratum_diagnostics",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/plot_network.R:plot_copula_network",
+      "target": "function:R/plot_network.R:resolve_node_groups",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:R/plot_network.R:plot_copula_network",
+      "target": "function:R/plot_network.R:default_group_palette",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:inst/examples/example_impactb.R",
+      "target": "function:R/prepare.R:prepare_copula_data",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:inst/examples/example_impactb.R",
+      "target": "function:R/fit.R:fit_copula_strata",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:inst/examples/example_impactb.R",
+      "target": "function:R/plot_heatmaps.R:plot_all_strata",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:inst/examples/example_impactb.R",
+      "target": "function:R/compare.R:compare_two_strata",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:inst/examples/example_impactb.R",
+      "target": "function:R/plot_compare.R:plot_stratum_comparison",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:inst/examples/example_impactb.R",
+      "target": "function:inst/examples/example_impactb.R:impactb_node_groups",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:tests/testthat.R",
+      "target": "file:tests/testthat/test-core.R",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:DESCRIPTION",
+      "target": "file:R/pipeline.R",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:DESCRIPTION",
+      "target": "file:R/fit.R",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:DESCRIPTION",
+      "target": "file:R/prepare.R",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:NAMESPACE",
+      "target": "file:R/pipeline.R",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:NAMESPACE",
+      "target": "file:R/fit.R",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:NAMESPACE",
+      "target": "file:R/compare.R",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:NAMESPACE",
+      "target": "file:R/plot_heatmaps.R",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:NAMESPACE",
+      "target": "file:R/plot_network.R",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:NAMESPACE",
+      "target": "file:R/plot_compare.R",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:NAMESPACE",
+      "target": "file:R/prepare.R",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:NAMESPACE",
+      "target": "file:R/stratify.R",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:NAMESPACE",
+      "target": "file:R/io.R",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "document:LICENSE.md",
+      "target": "file:DESCRIPTION",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:inst/examples/example_impactb.R",
+      "target": "function:R/pipeline.R:run_copula_pipeline",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:inst/examples/example_impactb.R",
+      "target": "function:R/prepare.R:prepare_copula_data",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:.understand-anything/.understandignore",
+      "target": "file:tests/testthat/test-core.R",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ],
+  "layers": [
+    {
+      "id": "layer:config",
+      "name": "Package Configuration",
+      "description": "R package metadata, namespace exports, and analysis tooling exclusion patterns for copulaNetworks.",
+      "nodeIds": [
+        "file:DESCRIPTION",
+        "file:NAMESPACE",
+        "file:.understand-anything/.understandignore"
+      ]
+    },
+    {
+      "id": "layer:documentation",
+      "name": "Documentation",
+      "description": "MIT license text and the ImpacTB end-to-end workflow example demonstrating stratified copula modeling.",
+      "nodeIds": [
+        "document:LICENSE.md",
+        "file:inst/examples/example_impactb.R"
+      ]
+    },
+    {
+      "id": "layer:entry",
+      "name": "Pipeline Entry",
+      "description": "Top-level run_copula_pipeline orchestrator chaining prepare, fit, diagnostics, and cross-stratum comparison.",
+      "nodeIds": [
+        "file:R/pipeline.R"
+      ]
+    },
+    {
+      "id": "layer:data",
+      "name": "Data Preparation",
+      "description": "Declarative stratum building and input validation that resolves node columns and named strata from recipes.",
+      "nodeIds": [
+        "file:R/prepare.R",
+        "file:R/stratify.R"
+      ]
+    },
+    {
+      "id": "layer:service",
+      "name": "Modeling Services",
+      "description": "Nonparanormal graphical lasso fitting via huge with StARS/EBIC selection and cross-stratum matrix comparison utilities.",
+      "nodeIds": [
+        "file:R/fit.R",
+        "file:R/compare.R"
+      ]
+    },
+    {
+      "id": "layer:ui",
+      "name": "Visualization",
+      "description": "ggplot2, ggraph, and tidygraph diagnostics including network graphs, correlation heatmaps, and stratum comparison plots.",
+      "nodeIds": [
+        "file:R/plot_network.R",
+        "file:R/plot_heatmaps.R",
+        "file:R/plot_compare.R"
+      ]
+    },
+    {
+      "id": "layer:utility",
+      "name": "Utility Layer",
+      "description": "RDS checkpoint persistence for saving and reloading pipeline intermediate results.",
+      "nodeIds": [
+        "file:R/io.R"
+      ]
+    },
+    {
+      "id": "layer:test",
+      "name": "Test Layer",
+      "description": "testthat suite covering nonparanormal transforms, stratum fitting, preparation, comparison, and checkpoint roundtrips.",
+      "nodeIds": [
+        "file:tests/testthat.R",
+        "file:tests/testthat/test-core.R"
+      ]
+    }
+  ],
+  "tour": [
+    {
+      "order": 1,
+      "title": "Package Purpose",
+      "description": "Start with DESCRIPTION to learn what copulaNetworks does: it fits and visualizes stratified nonparanormal Gaussian copula graphical models using graphical lasso with StARS model selection. The declared dependencies on huge, tidygraph, ggraph, ggplot2, and dplyr preview the statistical and visualization stack the rest of the tour will unpack.",
+      "nodeIds": [
+        "file:DESCRIPTION"
+      ]
+    },
+    {
+      "order": 2,
+      "title": "Public API Surface",
+      "description": "NAMESPACE is the contract between the package and its users, exporting 17 functions across preparation, fitting, plotting, and comparison. Reading it after DESCRIPTION shows which modules are user-facing and which external packages the implementation relies on, giving you a map before diving into pipeline.R.",
+      "nodeIds": [
+        "file:NAMESPACE"
+      ],
+      "languageLesson": "In R packages, roxygen2 comments generate NAMESPACE exports automatically. Only exported functions are part of the stable public API; unexported helpers remain internal implementation details."
+    },
+    {
+      "order": 3,
+      "title": "Pipeline Orchestration",
+      "description": "R/pipeline.R is the main entry point: run_copula_pipeline chains prepare, fit, diagnostic plotting, and optional pairwise stratum comparisons into one call. Understanding this orchestrator first reveals the end-to-end workflow and shows how every downstream module plugs into a single high-level interface.",
+      "nodeIds": [
+        "file:R/pipeline.R"
+      ]
+    },
+    {
+      "order": 4,
+      "title": "Declarative Stratification",
+      "description": "Data preparation splits across stratify.R and prepare.R. stratify.R builds named strata from declarative recipes (mutate, filter, group_by, stratum_col) with minimum sample size enforcement, while prepare.R validates column roles, resolves node variables, and delegates stratum construction. Together they turn a raw data frame into analysis-ready strata for copula fitting.",
+      "nodeIds": [
+        "file:R/stratify.R",
+        "file:R/prepare.R"
+      ]
+    },
+    {
+      "order": 5,
+      "title": "Copula Model Fitting",
+      "description": "fit.R is the statistical core called directly from the pipeline after preparation. It applies the nonparanormal transformation and runs graphical lasso via the huge package, selecting the penalty with StARS or EBIC across every stratum. The fitted partial-correlation structure is what all visualization and comparison steps consume.",
+      "nodeIds": [
+        "file:R/fit.R"
+      ],
+      "languageLesson": "The nonparanormal transform maps arbitrary marginals to Gaussian quantiles via rank-based normalization, letting glasso assume multivariate normality on the copula scale while preserving dependence structure from non-Gaussian data."
+    },
+    {
+      "order": 6,
+      "title": "Checkpoint Persistence",
+      "description": "io.R provides RDS checkpoint helpers that prepare, fit, and the pipeline itself call to save and reload intermediate results. This utility layer lets long stratified workflows resume without recomputing expensive glasso fits, and it is one of the most depended-upon modules in the graph.",
+      "nodeIds": [
+        "file:R/io.R"
+      ]
+    },
+    {
+      "order": 7,
+      "title": "Single-Stratum Diagnostics",
+      "description": "plot_heatmaps.R orchestrates per-stratum diagnostic output by combining network graphs, copula-correlation heatmaps, and partial-correlation heatmaps with PNG/PDF export. It delegates network rendering to plot_network.R, which draws glasso-selected edges with ggraph, node grouping, and FR layout. These two files translate fitted models into interpretable single-stratum visuals.",
+      "nodeIds": [
+        "file:R/plot_heatmaps.R",
+        "file:R/plot_network.R"
+      ]
+    },
+    {
+      "order": 8,
+      "title": "Cross-Stratum Comparison",
+      "description": "compare.R extracts edge lists and pairwise matrix differences between fitted strata for both partial correlation and copula correlation, while plot_compare.R turns those differences into ggplot2 scatter and bar charts with optional edge labeling. The pipeline wires both together when you request pairwise stratum comparisons beyond single-stratum diagnostics.",
+      "nodeIds": [
+        "file:R/compare.R",
+        "file:R/plot_compare.R"
+      ]
+    },
+    {
+      "order": 9,
+      "title": "End-to-End Example",
+      "description": "inst/examples/example_impactb.R walks through a complete ImpacTB workflow using declarative strata_specs and custom node-group styling. It depends on every major stage\u2014prepare, fit, diagnostics, and comparison\u2014making it the practical capstone that shows how the pipeline and individual functions compose in real analysis code.",
+      "nodeIds": [
+        "file:inst/examples/example_impactb.R"
+      ]
+    },
+    {
+      "order": 10,
+      "title": "Test Suite",
+      "description": "tests/testthat.R loads the package and runs the testthat suite, delegating to test-core.R for unit tests of the nonparanormal transform, stratum fitting, data preparation, cross-stratum comparison, and checkpoint roundtrips. These tests anchor the statistical and I/O behavior described throughout the tour and guard against regressions in the modeling pipeline.",
+      "nodeIds": [
+        "file:tests/testthat.R",
+        "file:tests/testthat/test-core.R"
+      ]
+    }
+  ]
+}

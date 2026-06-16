@@ -1,0 +1,136 @@
+{
+  "name": "copulaNetworks",
+  "description": "Fit and visualize stratified nonparanormal Gaussian copula graphical models using graphical lasso (glasso) with StARS model selection. Supports declarative stratification, single-stratum diagnostics, and cross-stratum structure comparison.",
+  "languages": [
+    "markdown",
+    "r",
+    "unknown"
+  ],
+  "frameworks": [
+    "dplyr",
+    "ggplot2",
+    "ggraph",
+    "igraph",
+    "testthat",
+    "tidygraph"
+  ],
+  "files": [
+    {
+      "path": ".understand-anything/.understandignore",
+      "language": "unknown",
+      "sizeLines": 17,
+      "fileCategory": "code"
+    },
+    {
+      "path": "DESCRIPTION",
+      "language": "unknown",
+      "sizeLines": 30,
+      "fileCategory": "code"
+    },
+    {
+      "path": "inst/examples/example_impactb.R",
+      "language": "r",
+      "sizeLines": 128,
+      "fileCategory": "code"
+    },
+    {
+      "path": "LICENSE.md",
+      "language": "markdown",
+      "sizeLines": 21,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "NAMESPACE",
+      "language": "unknown",
+      "sizeLines": 67,
+      "fileCategory": "code"
+    },
+    {
+      "path": "R/compare.R",
+      "language": "r",
+      "sizeLines": 182,
+      "fileCategory": "code"
+    },
+    {
+      "path": "R/fit.R",
+      "language": "r",
+      "sizeLines": 151,
+      "fileCategory": "code"
+    },
+    {
+      "path": "R/io.R",
+      "language": "r",
+      "sizeLines": 30,
+      "fileCategory": "code"
+    },
+    {
+      "path": "R/pipeline.R",
+      "language": "r",
+      "sizeLines": 117,
+      "fileCategory": "code"
+    },
+    {
+      "path": "R/plot_compare.R",
+      "language": "r",
+      "sizeLines": 261,
+      "fileCategory": "code"
+    },
+    {
+      "path": "R/plot_heatmaps.R",
+      "language": "r",
+      "sizeLines": 210,
+      "fileCategory": "code"
+    },
+    {
+      "path": "R/plot_network.R",
+      "language": "r",
+      "sizeLines": 152,
+      "fileCategory": "code"
+    },
+    {
+      "path": "R/prepare.R",
+      "language": "r",
+      "sizeLines": 115,
+      "fileCategory": "code"
+    },
+    {
+      "path": "R/stratify.R",
+      "language": "r",
+      "sizeLines": 86,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/testthat.R",
+      "language": "r",
+      "sizeLines": 4,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/testthat/test-core.R",
+      "language": "r",
+      "sizeLines": 107,
+      "fileCategory": "code"
+    }
+  ],
+  "totalFiles": 16,
+  "filteredByIgnore": 0,
+  "estimatedComplexity": "small",
+  "importMap": {
+    ".understand-anything/.understandignore": [],
+    "DESCRIPTION": [],
+    "inst/examples/example_impactb.R": [],
+    "LICENSE.md": [],
+    "NAMESPACE": [],
+    "R/compare.R": [],
+    "R/fit.R": [],
+    "R/io.R": [],
+    "R/pipeline.R": [],
+    "R/plot_compare.R": [],
+    "R/plot_heatmaps.R": [],
+    "R/plot_network.R": [],
+    "R/prepare.R": [],
+    "R/stratify.R": [],
+    "tests/testthat.R": [],
+    "tests/testthat/test-core.R": []
+  }
+}

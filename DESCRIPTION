@@ -1,0 +1,30 @@
+Package: copulaNetworks
+Title: Stratified Nonparanormal Copula Networks
+Version: 0.1.0
+Authors@R: person("GW", "McElfresh", email = "mcelfreshgw@gmail.com", role = c("aut", "cre"))
+Description: Fit and visualize stratified nonparanormal Gaussian copula
+    graphical models using graphical lasso (glasso) with StARS model
+    selection. Supports declarative stratification, single-stratum
+    diagnostics, and cross-stratum structure comparison.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Imports:
+    dplyr,
+    ggplot2,
+    ggraph,
+    ggrepel,
+    grid,
+    grDevices,
+    huge,
+    igraph,
+    pheatmap,
+    rlang,
+    stats,
+    tidyr,
+    tidygraph,
+    utils
+Suggests:
+    egg,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
