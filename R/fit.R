@@ -9,8 +9,7 @@
 NonparanormalTransform <- function(inputMatrix) {
   n <- nrow(inputMatrix)
   quantile_matrix <- apply(inputMatrix, 2, function(x) {
-    r <- rank(x, ties.method = "average")
-    qnorm(r / (n + 1))
+    qnorm(rank_to_uniform(x, n_ref = n))
   })
   colnames(quantile_matrix) <- colnames(inputMatrix)
   quantile_matrix
@@ -23,6 +22,9 @@ NonparanormalTransform <- function(inputMatrix) {
 #' @param nlambda Number of lambda values for the glasso path.
 #' @param method Lambda selection criterion: `"stars"` (StARS) or `"ebic"`.
 #' @param starsThresh StARS stability threshold (used when `method = "stars"`).
+#' @param preTransformed If `TRUE`, `data` columns are already normal scores
+#'   (skip [NonparanormalTransform()]). Ignored when `quantileMatrix` is supplied.
+#' @param quantileMatrix Optional pre-computed normal-score matrix (n x p).
 #' @return List with correlation matrix, partial correlation matrix, selected
 #'   graph, etc. Returns `NULL` if fewer than 3 non-constant variables.
 #' @export
@@ -30,7 +32,9 @@ FitStratumCopula <- function(data,
                              nodeCols,
                              nlambda = 40,
                              method = c("stars", "ebic"),
-                             starsThresh = 0.1) {
+                             starsThresh = 0.1,
+                             preTransformed = FALSE,
+                             quantileMatrix = NULL) {
   method <- match.arg(method)
   input_matrix <- as.matrix(data[, nodeCols, drop = FALSE])
 
@@ -43,7 +47,13 @@ FitStratumCopula <- function(data,
   input_matrix <- input_matrix[, keep, drop = FALSE]
   kept_cols <- colnames(input_matrix)
 
-  quantile_matrix <- NonparanormalTransform(input_matrix)
+  quantile_matrix <- if (!is.null(quantileMatrix)) {
+    quantileMatrix[, kept_cols, drop = FALSE]
+  } else if (isTRUE(preTransformed)) {
+    input_matrix
+  } else {
+    NonparanormalTransform(input_matrix)
+  }
   copula_cor <- cor(quantile_matrix, use = "pairwise.complete.obs")
 
   fit <- huge::huge(quantile_matrix, method = "glasso", nlambda = nlambda, verbose = FALSE)
