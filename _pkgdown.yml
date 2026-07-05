@@ -10,5 +10,6 @@ navbar:
       icon: fab fa-github
       href: https://github.com/GWMcElfresh/copulaNetworks
 articles:
-  - text: "Two-Phase Factor-Vine"
-    href: articles/two-phase-factor-vine.html
+  - title: Two-Phase Factor-Vine
+    contents:
+      - two-phase-factor-vine
