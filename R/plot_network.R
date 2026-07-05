@@ -132,7 +132,7 @@ PlotCopulaNetwork <- function(result,
     ggplot2::scale_fill_manual(values = palette, name = "Variable group") +
     ggplot2::labs(
       title = title,
-      subtitle = ggplot2::bquote(
+      subtitle = bquote(
         n == .(result$n) ~ "|" ~ p == .(length(result$keptCols)) ~
           "|" ~ edges == .(nrow(edge_df)) ~ "|" ~ lambda == .(round(result$lambdaOpt, 4))
       )
