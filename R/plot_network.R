@@ -111,36 +111,36 @@ PlotCopulaNetwork <- function(result,
   palette <- default_group_palette(node_df$group)
 
   set.seed(seed)
-  network_plot <- ggraph(graph_object, layout = "fr") +
-    geom_edge_link(
-      aes(width = abs_pcor, alpha = abs_pcor, colour = direction),
+  network_plot <- ggraph::ggraph(graph_object, layout = "fr") +
+    ggraph::geom_edge_link(
+      ggplot2::aes(width = abs_pcor, alpha = abs_pcor, colour = direction),
       lineend = "round"
     ) +
-    scale_edge_width_continuous(
+    ggraph::scale_edge_width_continuous(
       range = c(0.4, 3.5),
       name = "|Partial correlation|",
-      guide = guide_legend(override.aes = list(alpha = 1))
+      guide = ggplot2::guide_legend(override.aes = list(alpha = 1))
     ) +
-    scale_edge_alpha_continuous(range = c(0.25, 1), guide = "none") +
-    scale_edge_colour_manual(
+    ggraph::scale_edge_alpha_continuous(range = c(0.25, 1), guide = "none") +
+    ggraph::scale_edge_colour_manual(
       values = c("Positive" = "#C0392B", "Negative" = "#2980B9"),
       name = "Direction"
     ) +
-    geom_node_point(aes(fill = group), shape = 21, size = 6, colour = "white", stroke = 0.8) +
-    geom_node_text(aes(label = label), repel = TRUE, size = 3, fontface = "bold",
+    ggplot2::geom_node_point(ggplot2::aes(fill = group), shape = 21, size = 6, colour = "white", stroke = 0.8) +
+    ggraph::geom_node_text(ggplot2::aes(label = label), repel = TRUE, size = 3, fontface = "bold",
                    bg.colour = "white", bg.r = 0.15) +
-    scale_fill_manual(values = palette, name = "Variable group") +
-    labs(
+    ggplot2::scale_fill_manual(values = palette, name = "Variable group") +
+    ggplot2::labs(
       title = title,
-      subtitle = bquote(
+      subtitle = ggplot2::bquote(
         n == .(result$n) ~ "|" ~ p == .(length(result$keptCols)) ~
           "|" ~ edges == .(nrow(edge_df)) ~ "|" ~ lambda == .(round(result$lambdaOpt, 4))
       )
     ) +
-    theme_graph(base_family = "sans", base_size = 11) +
-    theme(
-      plot.title = element_text(face = "bold", size = 13),
-      plot.subtitle = element_text(size = 9, colour = "grey40"),
+    ggraph::theme_graph(base_family = "sans", base_size = 11) +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(face = "bold", size = 13),
+      plot.subtitle = ggplot2::element_text(size = 9, colour = "grey40"),
       legend.position = "right"
     )
 
