@@ -43,4 +43,4 @@ Remotes: stan-dev/cmdstanr
 Config/testthat/edition: 3
 Config/roxygen2/version: 8.0.0
 Config/Needs/website: pkgdown, knitr, rmarkdown
-Config/Needs/check: testthat, stan-dev/cmdstanr
+Config/Needs/check: testthat, stan-dev/cmdstanr, FactorCopula, knitr, rmarkdown
