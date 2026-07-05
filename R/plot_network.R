@@ -126,7 +126,7 @@ PlotCopulaNetwork <- function(result,
       values = c("Positive" = "#C0392B", "Negative" = "#2980B9"),
       name = "Direction"
     ) +
-    ggplot2::geom_node_point(ggplot2::aes(fill = group), shape = 21, size = 6, colour = "white", stroke = 0.8) +
+    ggraph::geom_node_point(ggplot2::aes(fill = group), shape = 21, size = 6, colour = "white", stroke = 0.8) +
     ggraph::geom_node_text(ggplot2::aes(label = label), repel = TRUE, size = 3, fontface = "bold",
                    bg.colour = "white", bg.r = 0.15) +
     ggplot2::scale_fill_manual(values = palette, name = "Variable group") +
