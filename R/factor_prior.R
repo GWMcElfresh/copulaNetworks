@@ -176,4 +176,5 @@ SimulateFactorCopula <- function(priorFit, nSim = NULL, nObs = NULL) {
 
 #' Null-coalescing helper
 #' @keywords internal
+#' @noRd
 `%||%` <- function(x, y) if (is.null(x)) y else x

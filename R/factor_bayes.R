@@ -98,7 +98,7 @@ FitBayesianFactorUpdate <- function(priorFit,
     )
   } else if (isTRUE(computeBayesFactor)) {
     warning(
-      "Package 'bridgesampling' not installed — skipping Bayes factor.",
+      "Package 'bridgesampling' not installed - skipping Bayes factor.",
       call. = FALSE
     )
   }

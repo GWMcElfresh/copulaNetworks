@@ -103,7 +103,7 @@ ComparePairwiseMatrices <- function(resA,
   only_in_b <- setdiff(colnames(mat_b), colnames(mat_a))
   if (length(only_in_a) > 0 || length(only_in_b) > 0) {
     warning(
-      "Variable mismatch — using intersection (n = ", length(shared), "). ",
+      "Variable mismatch - using intersection (n = ", length(shared), "). ",
       "Only in A: ", paste(only_in_a, collapse = ", "),
       "; only in B: ", paste(only_in_b, collapse = ", "),
       call. = FALSE

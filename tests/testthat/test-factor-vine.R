@@ -158,12 +158,10 @@ test_that("FitBayesianFactorUpdate runs on synthetic data", {
   expect_true(nrow(bayes$summary) > 0)
 })
 
-# --- Vignette source ---
-test_that("factor-vine vignette source exists and has required sections", {
-  v_path <- normalizePath(
-    file.path(testthat::test_path(), "..", "..", "vignettes", "two-phase-factor-vine.Rmd"),
-    mustWork = TRUE
-  )
+# --- Built vignette (R CMD check installs doc/, not vignettes/) ---
+test_that("factor-vine vignette is built with required sections", {
+  v_path <- system.file("doc", "two-phase-factor-vine.html", package = "copulaNetworks")
+  expect_true(nzchar(v_path), info = "Built vignette HTML missing from inst/doc")
   v <- readLines(v_path)
   expect_true(any(grepl("Phase 1", v)))
   expect_true(any(grepl("RunFactorVinePipeline", v)))
