@@ -1,0 +1,299 @@
+---
+title: "Bayesian Meta-Analysis with Power Prior"
+author: "GW McElfresh"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Bayesian Meta-Analysis with Power Prior}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5,
+  fig.align = "center"
+)
+
+draw_pheatmap <- function(grob) {
+  grid::grid.newpage()
+  grid::grid.draw(if (!is.null(grob$gtable)) grob$gtable else grob)
+  invisible(NULL)
+}
+```
+
+## Motivation
+
+When several **large historical cohorts** inform dependence among the same
+variables, a Bayesian **meta-analysis** can pool them before updating with a
+**small** new sample. The **power prior** (Ibrahim & Chen, 2000) discounts each
+cohort's contribution via \(a_0 \in [0,1]\), controlling borrowing strength.
+Zhang et al. (2017) motivate study-specific discounting for correlation
+meta-analysis; here we use the multivariate Normal-Inverse-Wishart conjugate
+framework in the [**powerprior**](https://cran.r-project.org/package=powerprior)
+package on Gaussian copula normal scores.
+
+## Setup
+
+```{r libs}
+library(copulaNetworks)
+```
+
+```{r check-deps}
+has_powerprior <- requireNamespace("powerprior", quietly = TRUE)
+```
+
+| Package | Role |
+|---------|------|
+| powerprior | Multivariate NIW power prior and posterior |
+| huge | Phase 2 graphical lasso (imported) |
+
+## Synthetic historical cohorts
+
+Three large cohorts share a latent factor structure with mild heterogeneity:
+
+```{r synthetic}
+set.seed(42)
+d <- 10
+n_update <- 30
+lambda <- runif(d, 0.35, 0.7)
+
+sim_block <- function(n_obs, lambda_jitter = 0) {
+  lam <- pmax(0.2, pmin(0.85, lambda + lambda_jitter))
+  f <- rnorm(n_obs)
+  eps <- matrix(rnorm(n_obs * d), nrow = n_obs, ncol = d)
+  factor_part <- matrix(lam, nrow = n_obs, ncol = d, byrow = TRUE) * f
+  x <- factor_part + sweep(eps, 2, sqrt(1 - lam^2), `*`)
+  colnames(x) <- paste0("node", seq_len(d))
+  as.data.frame(x)
+}
+
+historicalCohorts <- list(
+  cohortA = sim_block(400, lambda_jitter = 0),
+  cohortB = sim_block(350, lambda_jitter = 0.03),
+  cohortC = sim_block(300, lambda_jitter = -0.02)
+)
+updateData <- sim_block(n_update)
+nodes <- paste0("node", 1:d)
+lapply(historicalCohorts, nrow)
+```
+
+## Per-cohort correlation heatmaps
+
+```{r cohort-heatmaps, eval=has_powerprior, fig.cap="Per-cohort copula correlation (empirical on normal scores)"}
+for (cohort_name in names(historicalCohorts)) {
+  cohort_df <- historicalCohorts[[cohort_name]]
+  z_cohort <- qnorm(UniformMarginalTransform(as.matrix(cohort_df)))
+  cohort_cor <- cor(z_cohort)
+  draw_pheatmap(
+    PlotCopulaCorHeatmap(
+      list(copulaCor = cohort_cor, keptCols = nodes),
+      title = paste("Cohort:", cohort_name)
+    )
+  )
+}
+```
+
+## Phase 1: Meta-analytic power prior
+
+```{r phase1, eval=has_powerprior}
+meta_prior <- FitMetaCorPrior(
+  historicalCohorts,
+  nodeCols = nodes,
+  a0 = c(0.6, 0.5, 0.5)
+)
+meta_prior$cohortSummaries
+meta_prior$nHistorical
+```
+
+Meta-analytic implied correlation:
+
+```{r phase1-heatmap, eval=has_powerprior, fig.cap="Phase 1 meta-analytic implied correlation"}
+draw_pheatmap(
+  PlotCopulaCorHeatmap(
+    list(copulaCor = meta_prior$impliedCor, keptCols = nodes),
+    title = "Meta-analytic prior correlation"
+  )
+)
+```
+
+Prior network (dense pseudo-graphical fit from implied correlation):
+
+```{r phase1-network, eval=has_powerprior, fig.cap="Meta-analytic prior network"}
+prior_pseudo <- PseudoGraphicalFitFromCor(meta_prior$impliedCor, nObs = meta_prior$n)
+print(PlotCopulaNetwork(
+  prior_pseudo,
+  title = "Meta-analytic prior",
+  printPlot = FALSE
+))
+```
+
+## Phase 2: Graphical update on small sample
+
+Update data use **pooled historical** marginal transforms:
+
+```{r phase2, eval=has_powerprior}
+update_fit <- FitCopulaUpdate(
+  updateData,
+  priorFit = meta_prior,
+  method = "graphical",
+  nlambda = 20
+)
+update_fit$graphical$lambdaOpt
+```
+
+```{r phase2-cor-heatmap, eval=has_powerprior, fig.cap="Phase 2 update copula correlation"}
+draw_pheatmap(
+  PlotCopulaCorHeatmap(
+    update_fit$graphical,
+    title = "Phase 2 update copula correlation"
+  )
+)
+```
+
+```{r phase2-pcor-heatmap, eval=has_powerprior, fig.cap="Phase 2 update partial correlation"}
+draw_pheatmap(
+  PlotPcorHeatmap(
+    update_fit$graphical,
+    title = "Phase 2 update partial correlation"
+  )
+)
+```
+
+```{r phase2-network, eval=has_powerprior, fig.cap="Phase 2 update graphical network"}
+print(PlotCopulaNetwork(
+  update_fit$graphical,
+  title = "Phase 2 update",
+  printPlot = FALSE
+))
+```
+
+## Prior vs update comparison
+
+```{r comparison, eval=has_powerprior}
+cmp <- ComparePriorToUpdate(meta_prior, update_fit)
+cmp_plots <- PlotStratumComparison(cmp)
+```
+
+```{r comparison-pcor-scatter, eval=has_powerprior, fig.cap="Partial correlation: meta prior vs update", fig.width=8, fig.height=6}
+print(cmp_plots$plots$pcor$scatter)
+```
+
+```{r comparison-cor-scatter, eval=has_powerprior, fig.cap="Copula correlation: meta prior vs update", fig.width=8, fig.height=6}
+print(cmp_plots$plots$copulaCor$scatter)
+```
+
+## Bayesian conjugate update
+
+```{r bayes, eval=has_powerprior}
+bayes_fit <- FitBayesianMetaUpdate(meta_prior, updateData)
+head(bayes_fit$impliedCor[, 1:4])
+```
+
+Posterior correlation heatmap:
+
+```{r bayes-heatmap, eval=has_powerprior, fig.cap="Posterior correlation after powerprior update"}
+draw_pheatmap(
+  PlotCopulaCorHeatmap(
+    list(copulaCor = bayes_fit$impliedCor, keptCols = nodes),
+    title = "Posterior correlation (conjugate update)"
+  )
+)
+```
+
+## Discount sensitivity
+
+Global discount grid (same `a0` recycled across cohorts):
+
+```{r sensitivity, eval=has_powerprior}
+sens <- RunDiscountSensitivity(
+  meta_prior,
+  updateData,
+  a0Values = c(0, 0.25, 0.5, 0.75, 1)
+)
+sens$summary
+```
+
+Univariate diagnostic via **powerprior** (first node mean on pooled historical Z):
+
+```{r sensitivity-plot, eval=has_powerprior, fig.cap="Discount sensitivity (powerprior)"}
+z_pooled <- do.call(rbind, meta_prior$zCohortList)
+z_update <- bayes_fit$zMatrix
+cmp_disc <- powerprior::compare_discounting(
+  z_pooled,
+  z_update,
+  a0_values = c(0, 0.25, 0.5, 0.75, 1),
+  multivariate = TRUE
+)
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  print(powerprior::plot_sensitivity(cmp_disc, parameter = "mu", dimension = 1))
+}
+```
+
+Posterior correlation at selected discount values:
+
+```{r sensitivity-cor-heatmaps, eval=has_powerprior, fig.cap="Posterior correlation vs global a0"}
+for (a0_key in c("0", "0.5", "1")) {
+  draw_pheatmap(
+    PlotCopulaCorHeatmap(
+      list(copulaCor = sens$corMatrices[[a0_key]], keptCols = nodes),
+      title = paste("Posterior cor, global a0 =", a0_key)
+    )
+  )
+}
+```
+
+Compatibility of each historical cohort with the update sample:
+
+```{r compatibility, eval=has_powerprior}
+compat <- lapply(names(meta_prior$zCohortList), function(nm) {
+  powerprior::check_compatibility(meta_prior$zCohortList[[nm]], bayes_fit$zMatrix)
+})
+names(compat) <- names(meta_prior$zCohortList)
+compat
+```
+
+## End-to-end pipeline
+
+```{r pipeline, eval=has_powerprior}
+res <- RunMetaAnalysisPipeline(
+  historicalCohorts = historicalCohorts,
+  updateData = updateData,
+  nodeCols = nodes,
+  a0 = c(0.6, 0.5, 0.5),
+  a0Sensitivity = c(0, 0.5, 1),
+  phase2Method = "graphical",
+  nlambda = 20
+)
+res$bayesFit$impliedCor[1, 2]
+nrow(res$sensitivity$summary)
+```
+
+## Relation to factor-vine workflow
+
+Use [`RunFactorVinePipeline()`](https://GWMcElfresh.github.io/copulaNetworks/reference/RunFactorVinePipeline.html)
+when a **single** large reference cohort supports a factor copula prior.
+Use `RunMetaAnalysisPipeline()` when **multiple** historical cohorts should be
+pooled with study-specific discounting before a small-sample update.
+
+## Limitations
+
+- Sequential NIW chaining (not a full multi-study product likelihood)
+- Global `a0` only in `RunDiscountSensitivity()`; per-cohort `a0` in `FitMetaCorPrior()`
+- Correlation from NIW mean covariance, not full posterior over correlation elements
+- Random-effects meta-analysis (Zhang et al. §2.2) deferred
+- Covariate-adjusted marginals: supply pre-adjusted data in v1
+
+## References
+
+- Ibrahim, J. G., & Chen, M. H. (2000). Power prior distributions for regression models. *Statistical Science*, 15(1), 46–60.
+- Zhang, Z., Jiang, K., Liu, H., & Oh, I.-S. (2017). Bayesian meta-analysis of correlation coefficients through power prior. *Communications in Statistics - Theory and Methods*, 46(24), 11988–12007. [doi:10.1080/03610926.2017.1288251](https://doi.org/10.1080/03610926.2017.1288251)
+
+## Session info
+
+```{r session}
+sessionInfo()
+```

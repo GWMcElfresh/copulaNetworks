@@ -7,7 +7,8 @@
 ComparePriorToUpdate(priorFit, updateFit, deltaThreshold = 0.05)
 }
 \arguments{
-\item{priorFit}{Output of \code{\link[=FitFactorCopulaPrior]{FitFactorCopulaPrior()}}.}
+\item{priorFit}{Prior fit with \code{impliedCor} and \code{n} (\code{\link[=FitFactorCopulaPrior]{FitFactorCopulaPrior()}}
+or \code{\link[=FitMetaCorPrior]{FitMetaCorPrior()}}).}
 
 \item{updateFit}{Output of \code{\link[=FitCopulaUpdate]{FitCopulaUpdate()}}.}
 

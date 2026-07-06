@@ -6,10 +6,12 @@ Stratified and two-phase copula network modeling for high-dimensional dependence
 
 - **Stratified workflow** (`RunCopulaPipeline`): nonparanormal graphical lasso networks per stratum
 - **Two-phase factor-vine** (`RunFactorVinePipeline`): large-sample factor copula prior + small-sample graphical/vine update
+- **Bayesian meta-analysis** (`RunMetaAnalysisPipeline`): multiple historical cohorts via power prior + small-sample update
 
 ## Documentation
 
-Full tutorial: [Two-Phase Factor-Vine Vignette](https://GWMcElfresh.github.io/copulaNetworks/articles/two-phase-factor-vine.html)
+- [Two-Phase Factor-Vine Vignette](https://GWMcElfresh.github.io/copulaNetworks/articles/two-phase-factor-vine.html)
+- [Meta-Analysis Power Prior Vignette](https://GWMcElfresh.github.io/copulaNetworks/articles/meta-analysis-power-prior.html)
 
 ## Quick start
 

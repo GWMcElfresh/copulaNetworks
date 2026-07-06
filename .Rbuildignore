@@ -1,0 +1,9 @@
+^\.cursor$
+^\.github$
+^\.understand-anything$
+^copulaNetworks_.*\.tar\.gz$
+^factor_vine_plan\.md$
+^docs$
+^vignettes/.*\.html$
+^vignettes/.*\.knit\.md$
+^vignettes/.*_files$
