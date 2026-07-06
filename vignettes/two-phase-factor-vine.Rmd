@@ -1,0 +1,230 @@
+---
+title: "Two-Phase Factor-Vine Copula Networks"
+author: "GW McElfresh"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Two-Phase Factor-Vine Copula Networks}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+```
+
+## Motivation
+
+Modern copula models use latent factors to handle high-dimensional dependence.
+In a **two-phase** workflow we fit a parsimonious factor copula on a **large**
+reference cohort (Phase 1), then update with a graphical model or vine copula on
+a **small** new sample (Phase 2), testing whether the update is consistent with
+the prior. See `factor_vine_plan.md` in the package source for literature
+context.
+
+## Setup
+
+```{r libs}
+library(copulaNetworks)
+```
+
+Optional dependencies (install as needed):
+
+| Package | Role |
+|---------|------|
+| FactorCopula | Phase 1 factor copula MLE |
+| VineCopula | Phase 2 vine update |
+| cmdstanr | Bayesian Gaussian update |
+| bridgesampling | Marginal likelihood / Bayes factor |
+
+```{r check-deps}
+has_factor <- requireNamespace("FactorCopula", quietly = TRUE)
+has_vine <- requireNamespace("VineCopula", quietly = TRUE)
+has_cmdstanr <- requireNamespace("cmdstanr", quietly = TRUE)
+```
+
+## Synthetic data
+
+```{r synthetic}
+set.seed(42)
+d <- 12
+N <- 500
+n <- 30
+lambda <- runif(d, 0.35, 0.75)
+sim_block <- function(n_obs) {
+  f <- rnorm(n_obs)
+  eps <- matrix(rnorm(n_obs * d), nrow = n_obs, ncol = d)
+  factor_part <- matrix(lambda, nrow = n_obs, ncol = d, byrow = TRUE) * f
+  x <- factor_part + sweep(eps, 2, sqrt(1 - lambda^2), `*`)
+  colnames(x) <- paste0("node", seq_len(d))
+  as.data.frame(x)
+}
+priorData <- sim_block(N)
+updateData <- sim_block(n)
+nodes <- paste0("node", 1:d)
+dim(priorData)
+dim(updateData)
+```
+
+## Marginal transforms
+
+Phase 2 must use **prior-fitted** marginal transforms, not re-ranking on small `n`.
+
+```{r marginals}
+marginalSpec <- FitMarginalSpec(priorData, nodeCols = nodes)
+U_update <- ApplyMarginalSpec(updateData, marginalSpec)
+range(U_update)
+```
+
+Contrast with re-ranking on the small sample (wrong for copula update):
+
+```{r wrong-rank}
+U_wrong <- UniformMarginalTransform(as.matrix(updateData))
+mean(abs(U_update - U_wrong))
+```
+
+Normal scores for graphical update:
+
+```{r normal-scores}
+Z_update <- qnorm(U_update)
+head(Z_update[, 1:3])
+```
+
+## Phase 1: Factor structure and prior fit
+
+```{r phase1-check, eval=has_factor}
+prior_fit <- FitFactorCopulaPrior(
+  priorData,
+  nodeCols = nodes,
+  nFactors = 1L,
+  linkingCopula = "bvn"
+)
+CheckFactorStructure(prior_fit$impliedCor, nFactors = 1L)
+prior_fit$loadings
+```
+
+Implied correlation heatmap:
+
+```{r phase1-heatmap, eval=has_factor, fig.cap="Prior implied correlation"}
+if (has_factor) {
+  PlotCopulaCorHeatmap(
+    list(copulaCor = prior_fit$impliedCor, keptCols = nodes),
+    title = "Phase 1 implied correlation"
+  )
+}
+```
+
+## Phase 2(a): Vine update
+
+```{r phase2-vine, eval=has_factor && has_vine}
+update_fit_both <- FitCopulaUpdate(
+  updateData,
+  priorFit = prior_fit,
+  method = "both",
+  nlambda = 20
+)
+if (!is.null(update_fit_both$vine)) {
+  update_fit_both$vine$logLik
+}
+FactorGroupsFromLoadings(prior_fit$loadings, k = 2)
+```
+
+## Phase 2(b): Graphical update
+
+```{r phase2-graphical, eval=has_factor}
+update_fit <- FitCopulaUpdate(
+  updateData,
+  priorFit = prior_fit,
+  method = "graphical",
+  nlambda = 20
+)
+update_fit$graphical$lambdaOpt
+```
+
+Network plot:
+
+```{r network-plot, eval=has_factor, fig.cap="Update graphical network"}
+if (has_factor && !is.null(update_fit$graphical)) {
+  PlotCopulaNetwork(update_fit$graphical, title = "update")
+}
+```
+
+## Prior vs update comparison
+
+```{r comparison, eval=has_factor}
+cmp <- ComparePriorToUpdate(prior_fit, update_fit)
+head(cmp$pcor)
+```
+
+## Frequentist consistency test
+
+```{r gof, eval=has_factor}
+gof <- TestPriorConsistency(
+  prior_fit,
+  updateData,
+  nRep = 200,
+  seed = 1
+)
+gof$pValue
+hist(gof$nullDistribution, main = "Null distribution", xlab = "pairwise tau stat")
+abline(v = gof$obsStat, col = "red", lwd = 2)
+```
+
+## Bayesian update
+
+```{r bayes, eval=has_factor && has_cmdstanr, message=FALSE, warning=FALSE}
+if (has_factor && has_cmdstanr) {
+  bayes_fit <- FitBayesianFactorUpdate(
+    prior_fit,
+    updateData,
+    chains = 2,
+    iter = 500,
+    computeBayesFactor = requireNamespace("bridgesampling", quietly = TRUE),
+    seed = 1
+  )
+  head(bayes_fit$summary)
+}
+```
+
+## End-to-end pipeline
+
+```{r pipeline, eval=has_factor}
+res <- RunFactorVinePipeline(
+  priorData = priorData,
+  updateData = updateData,
+  nodeCols = nodes,
+  nFactors = 1L,
+  phase2Method = "graphical",
+  testMethod = "simulation",
+  nRep = 100,
+  nlambda = 20,
+  seed = 1
+)
+res$consistencyTest$pValue
+```
+
+Checkpoints use `SaveCheckpoint()` / `LoadCheckpoint()` when `outDir` is set.
+
+## Relation to stratified API
+
+For **single-table stratified** workflows, use `RunCopulaPipeline()` with
+`PrepareCopulaData()` and stratum specs. Use `RunFactorVinePipeline()` when you
+have separate large prior and small update cohorts.
+
+## Limitations
+
+- Covariate-adjusted marginals: user supplies pre-adjusted data in v1
+- Continuous margins only for `FitFactorCopulaPrior()`
+- Factor-informed vine truncation uses heuristic `FactorGroupsFromLoadings()`
+- Full factor-tree vines deferred
+
+## Session info
+
+```{r session}
+sessionInfo()
+```

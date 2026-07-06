@@ -1,10 +1,10 @@
 #' Extract edge list from a copula fit result
 #'
-#' @param result Output of [fit_stratum_copula()].
+#' @param result Output of [FitStratumCopula()].
 #' @param label Stratum label.
 #' @return Data frame with columns `from`, `to`, `pcor`, `stratum`, `edge`.
 #' @export
-extract_edges <- function(result, label) {
+ExtractEdges <- function(result, label) {
   if (is.null(result)) {
     return(NULL)
   }
@@ -37,17 +37,17 @@ extract_pairwise_values <- function(mat, vars = colnames(mat), edge_only = FALSE
   pairs <- combn(vars, 2, simplify = FALSE)
   if (length(pairs) == 0) {
     return(data.frame(
-      var_i = character(0),
-      var_j = character(0),
+      varI = character(0),
+      varJ = character(0),
       edge = character(0),
       value = numeric(0),
       stringsAsFactors = FALSE
     ))
   }
 
-  out <- lapply(pairs, function(pair) {
-    i <- pair[1]
-    j <- pair[2]
+  out <- lapply(pairs, function(variable_pair) {
+    i <- variable_pair[1]
+    j <- variable_pair[2]
     val <- mat[i, j]
     if (edge_only) {
       if (is.null(adj) || adj[i, j] == 0) {
@@ -55,8 +55,8 @@ extract_pairwise_values <- function(mat, vars = colnames(mat), edge_only = FALSE
       }
     }
     data.frame(
-      var_i = i,
-      var_j = j,
+      varI = i,
+      varJ = j,
       edge = paste(pmin(i, j), pmax(i, j), sep = " -- "),
       value = val,
       stringsAsFactors = FALSE
@@ -68,44 +68,44 @@ extract_pairwise_values <- function(mat, vars = colnames(mat), edge_only = FALSE
 
 #' Compare pairwise matrix values across two strata
 #'
-#' @param res_a First stratum fit result.
-#' @param res_b Second stratum fit result.
-#' @param label_a Label for stratum A.
-#' @param label_b Label for stratum B.
-#' @param matrix_name One of `"pcor"` or `"copula_cor"`.
-#' @param edge_only For `"pcor"`, if `TRUE` only adjacency edges are non-zero.
-#'   For `"copula_cor"`, defaults to `FALSE` (all pairs).
-#' @param delta_threshold Threshold for direction classification.
+#' @param resA First stratum fit result.
+#' @param resB Second stratum fit result.
+#' @param labelA Label for stratum A.
+#' @param labelB Label for stratum B.
+#' @param matrixName One of `"pcor"` or `"copulaCor"`.
+#' @param edgeOnly For `"pcor"`, if `TRUE` only adjacency edges are non-zero.
+#'   For `"copulaCor"`, defaults to `FALSE` (all pairs).
+#' @param deltaThreshold Threshold for direction classification.
 #' @return Data frame with comparison columns.
 #' @export
-compare_pairwise_matrices <- function(res_a,
-                                      res_b,
-                                      label_a,
-                                      label_b,
-                                      matrix_name = c("pcor", "copula_cor"),
-                                      edge_only = NULL,
-                                      delta_threshold = 0.05) {
-  matrix_name <- match.arg(matrix_name)
+ComparePairwiseMatrices <- function(resA,
+                                    resB,
+                                    labelA,
+                                    labelB,
+                                    matrixName = c("pcor", "copulaCor"),
+                                    edgeOnly = NULL,
+                                    deltaThreshold = 0.05) {
+  matrixName <- match.arg(matrixName)
 
-  if (is.null(res_a) || is.null(res_b)) {
+  if (is.null(resA) || is.null(resB)) {
     stop("Both fit results must be non-NULL.", call. = FALSE)
   }
 
-  mat_a <- res_a[[matrix_name]]
-  mat_b <- res_b[[matrix_name]]
+  mat_a <- resA[[matrixName]]
+  mat_b <- resB[[matrixName]]
   shared <- intersect(colnames(mat_a), colnames(mat_b))
 
   if (length(shared) < 2) {
     stop("Fewer than 2 shared variables between strata.", call. = FALSE)
   }
 
-  only_a <- setdiff(colnames(mat_a), colnames(mat_b))
-  only_b <- setdiff(colnames(mat_b), colnames(mat_a))
-  if (length(only_a) > 0 || length(only_b) > 0) {
+  only_in_a <- setdiff(colnames(mat_a), colnames(mat_b))
+  only_in_b <- setdiff(colnames(mat_b), colnames(mat_a))
+  if (length(only_in_a) > 0 || length(only_in_b) > 0) {
     warning(
-      "Variable mismatch — using intersection (n = ", length(shared), "). ",
-      "Only in A: ", paste(only_a, collapse = ", "),
-      "; only in B: ", paste(only_b, collapse = ", "),
+      "Variable mismatch - using intersection (n = ", length(shared), "). ",
+      "Only in A: ", paste(only_in_a, collapse = ", "),
+      "; only in B: ", paste(only_in_b, collapse = ", "),
       call. = FALSE
     )
   }
@@ -113,70 +113,70 @@ compare_pairwise_matrices <- function(res_a,
   mat_a <- mat_a[shared, shared, drop = FALSE]
   mat_b <- mat_b[shared, shared, drop = FALSE]
 
-  if (is.null(edge_only)) {
-    edge_only <- matrix_name == "pcor"
+  if (is.null(edgeOnly)) {
+    edgeOnly <- matrixName == "pcor"
   }
 
-  adj_a <- if (edge_only && matrix_name == "pcor") res_a$adjacency[shared, shared, drop = FALSE] else NULL
-  adj_b <- if (edge_only && matrix_name == "pcor") res_b$adjacency[shared, shared, drop = FALSE] else NULL
+  adj_a <- if (edgeOnly && matrixName == "pcor") resA$adjacency[shared, shared, drop = FALSE] else NULL
+  adj_b <- if (edgeOnly && matrixName == "pcor") resB$adjacency[shared, shared, drop = FALSE] else NULL
 
-  pairs_a <- extract_pairwise_values(mat_a, shared, edge_only = edge_only, adj = adj_a)
-  pairs_b <- extract_pairwise_values(mat_b, shared, edge_only = edge_only, adj = adj_b)
+  pairs_a <- extract_pairwise_values(mat_a, shared, edge_only = edgeOnly, adj = adj_a)
+  pairs_b <- extract_pairwise_values(mat_b, shared, edge_only = edgeOnly, adj = adj_b)
 
-  cmp <- dplyr::full_join(
-    pairs_a %>% dplyr::select(edge, value_a = value),
-    pairs_b %>% dplyr::select(edge, value_b = value),
+  comparison_result <- dplyr::full_join(
+    pairs_a %>% dplyr::select(edge, valueA = value),
+    pairs_b %>% dplyr::select(edge, valueB = value),
     by = "edge"
   ) %>%
-    tidyr::replace_na(list(value_a = 0, value_b = 0)) %>%
+    tidyr::replace_na(list(valueA = 0, valueB = 0)) %>%
     dplyr::mutate(
-      delta = value_a - value_b,
-      abs_delta = abs(delta),
+      delta = valueA - valueB,
+      absDelta = abs(delta),
       direction = dplyr::case_when(
-        abs(value_a) > 0 & abs(value_b) == 0 ~ paste("Only in", label_a),
-        abs(value_a) == 0 & abs(value_b) > 0 ~ paste("Only in", label_b),
-        delta > delta_threshold ~ paste("Stronger in", label_a),
-        delta < -delta_threshold ~ paste("Stronger in", label_b),
+        abs(valueA) > 0 & abs(valueB) == 0 ~ paste("Only in", labelA),
+        abs(valueA) == 0 & abs(valueB) > 0 ~ paste("Only in", labelB),
+        delta > deltaThreshold ~ paste("Stronger in", labelA),
+        delta < -deltaThreshold ~ paste("Stronger in", labelB),
         TRUE ~ "Similar"
       ),
-      matrix = matrix_name,
-      label_a = label_a,
-      label_b = label_b
+      matrix = matrixName,
+      labelA = labelA,
+      labelB = labelB
     ) %>%
-    dplyr::arrange(dplyr::desc(abs_delta))
+    dplyr::arrange(dplyr::desc(absDelta))
 
-  cmp
+  comparison_result
 }
 
 #' Compare two fitted strata across matrix types
 #'
-#' @param res_a First stratum fit result.
-#' @param res_b Second stratum fit result.
-#' @param label_a Label for stratum A.
-#' @param label_b Label for stratum B.
-#' @param matrices Character vector of matrices to compare (`"pcor"`, `"copula_cor"`).
-#' @param delta_threshold Threshold for direction labels and bar charts.
-#' @param edge_only_pcor If `TRUE`, pcor comparison uses adjacency edges only.
-#' @param edge_only_cor If `FALSE` (default), copula cor compares all pairs.
+#' @param resA First stratum fit result.
+#' @param resB Second stratum fit result.
+#' @param labelA Label for stratum A.
+#' @param labelB Label for stratum B.
+#' @param matrices Character vector of matrices to compare (`"pcor"`, `"copulaCor"`).
+#' @param deltaThreshold Threshold for direction labels and bar charts.
+#' @param edgeOnlyPcor If `TRUE`, pcor comparison uses adjacency edges only.
+#' @param edgeOnlyCor If `FALSE` (default), copula cor compares all pairs.
 #' @return List with comparison data frames keyed by matrix name.
 #' @export
-compare_two_strata <- function(res_a,
-                               res_b,
-                               label_a = "A",
-                               label_b = "B",
-                               matrices = c("pcor", "copula_cor"),
-                               delta_threshold = 0.05,
-                               edge_only_pcor = TRUE,
-                               edge_only_cor = FALSE) {
+CompareTwoStrata <- function(resA,
+                             resB,
+                             labelA = "A",
+                             labelB = "B",
+                             matrices = c("pcor", "copulaCor"),
+                             deltaThreshold = 0.05,
+                             edgeOnlyPcor = TRUE,
+                             edgeOnlyCor = FALSE) {
   out <- list()
   for (mat in matrices) {
-    edge_only <- if (mat == "pcor") edge_only_pcor else edge_only_cor
-    out[[mat]] <- compare_pairwise_matrices(
-      res_a, res_b, label_a, label_b,
-      matrix_name = mat,
-      edge_only = edge_only,
-      delta_threshold = delta_threshold
+    edge_only <- if (mat == "pcor") edgeOnlyPcor else edgeOnlyCor
+    out[[mat]] <- ComparePairwiseMatrices(
+      resA, resB, labelA, labelB,
+      matrixName = mat,
+      edgeOnly = edge_only,
+      deltaThreshold = deltaThreshold
     )
   }
-  structure(out, class = "copula_stratum_comparison")
+  structure(out, class = "CopulaStratumComparison")
 }

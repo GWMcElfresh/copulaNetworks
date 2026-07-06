@@ -6,14 +6,14 @@
 #'     \item{`mutate`}{Quoted expression evaluated with [rlang::eval_tidy()].}
 #'     \item{`filter`}{Quoted expression for row filtering.}
 #'     \item{`group_by`}{Character vector of grouping columns, or a single column name.}
-#'     \item{`stratum_col`}{Pre-built stratum column (skips `group_by` split).}
-#'     \item{`name_sep`}{Separator when joining multiple `group_by` columns (default `" | "`).}
-#'     \item{`min_n`}{Minimum rows per stratum (default 1).}
+#'     \item{`stratumCol`}{Pre-built stratum column (skips `group_by` split).}
+#'     \item{`nameSep`}{Separator when joining multiple `group_by` columns (default `" | "`).}
+#'     \item{`minN`}{Minimum rows per stratum (default 1).}
 #'   }
-#' @param spec_name Name prefix for strata (used in messages).
+#' @param specName Name prefix for strata (used in messages).
 #' @return Named list of stratum data frames.
 #' @export
-build_strata <- function(data, spec, spec_name = "strata") {
+BuildStrata <- function(data, spec, specName = "strata") {
   df <- data
 
   if (!is.null(spec$mutate)) {
@@ -28,13 +28,13 @@ build_strata <- function(data, spec, spec_name = "strata") {
     df <- df[keep, , drop = FALSE]
   }
 
-  min_n <- if (is.null(spec$min_n)) 1L else as.integer(spec$min_n)
-  name_sep <- if (is.null(spec$name_sep)) " | " else spec$name_sep
+  min_n <- if (is.null(spec$minN)) 1L else as.integer(spec$minN)
+  name_sep <- if (is.null(spec$nameSep)) " | " else spec$nameSep
 
-  if (!is.null(spec$stratum_col)) {
-    stratum_col <- spec$stratum_col
+  if (!is.null(spec$stratumCol)) {
+    stratum_col <- spec$stratumCol
     if (!stratum_col %in% colnames(df)) {
-      stop("stratum_col '", stratum_col, "' not found in data.", call. = FALSE)
+      stop("stratumCol '", stratum_col, "' not found in data.", call. = FALSE)
     }
     levels <- sort(unique(as.character(df[[stratum_col]])))
     strata <- stats::setNames(vector("list", length(levels)), levels)
@@ -43,8 +43,8 @@ build_strata <- function(data, spec, spec_name = "strata") {
       if (nrow(sub) >= min_n) {
         strata[[lv]] <- sub
       } else {
-        warning("Dropping stratum '", lv, "' in ", spec_name, " — n = ", nrow(sub),
-                " < min_n = ", min_n, ".", call. = FALSE)
+        warning("Dropping stratum '", lv, "' in ", specName, " - n = ", nrow(sub),
+                " < minN = ", min_n, ".", call. = FALSE)
       }
     }
     strata <- strata[!vapply(strata, is.null, logical(1))]
@@ -52,7 +52,7 @@ build_strata <- function(data, spec, spec_name = "strata") {
   }
 
   if (is.null(spec$group_by)) {
-    stop("strata spec must include either 'stratum_col' or 'group_by'.", call. = FALSE)
+    stop("strata spec must include either 'stratumCol' or 'group_by'.", call. = FALSE)
   }
 
   group_cols <- spec$group_by
@@ -72,12 +72,12 @@ build_strata <- function(data, spec, spec_name = "strata") {
   splits <- split(df, stratum_names)
   strata <- splits
 
-  for (nm in names(strata)) {
-    strata[[nm]] <- strata[[nm]][, setdiff(colnames(strata[[nm]]), ".stratum_name"), drop = FALSE]
-    if (nrow(strata[[nm]]) < min_n) {
-      warning("Dropping stratum '", nm, "' in ", spec_name, " — n = ", nrow(strata[[nm]]),
-              " < min_n = ", min_n, ".", call. = FALSE)
-      strata[[nm]] <- NULL
+  for (stratum_name in names(strata)) {
+    strata[[stratum_name]] <- strata[[stratum_name]][, setdiff(colnames(strata[[stratum_name]]), ".stratum_name"), drop = FALSE]
+    if (nrow(strata[[stratum_name]]) < min_n) {
+      warning("Dropping stratum '", stratum_name, "' in ", specName, " - n = ", nrow(strata[[stratum_name]]),
+              " < minN = ", min_n, ".", call. = FALSE)
+      strata[[stratum_name]] <- NULL
     }
   }
 

@@ -1,30 +1,30 @@
 #' Save a checkpoint RDS file
 #'
 #' @param object R object to save.
-#' @param out_dir Output directory.
+#' @param outDir Output directory.
 #' @param filename File name (default `checkpoint.rds`).
 #' @return Invisibly returns the full file path.
 #' @export
-save_checkpoint <- function(object, out_dir, filename = "checkpoint.rds") {
-  if (!dir.exists(out_dir)) {
-    dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+SaveCheckpoint <- function(object, outDir, filename = "checkpoint.rds") {
+  if (!dir.exists(outDir)) {
+    dir.create(outDir, recursive = TRUE, showWarnings = FALSE)
   }
-  path <- file.path(out_dir, filename)
-  saveRDS(object, path)
-  message("Saved checkpoint: ", path)
-  invisible(path)
+  file_path <- file.path(outDir, filename)
+  saveRDS(object, file_path)
+  message("Saved checkpoint: ", file_path)
+  invisible(file_path)
 }
 
 #' Load a checkpoint RDS file
 #'
-#' @param out_dir Directory containing the checkpoint.
+#' @param outDir Directory containing the checkpoint.
 #' @param filename File name (default `checkpoint.rds`).
 #' @return The loaded object.
 #' @export
-load_checkpoint <- function(out_dir, filename = "checkpoint.rds") {
-  path <- file.path(out_dir, filename)
-  if (!file.exists(path)) {
-    stop("Checkpoint not found: ", path, call. = FALSE)
+LoadCheckpoint <- function(outDir, filename = "checkpoint.rds") {
+  file_path <- file.path(outDir, filename)
+  if (!file.exists(file_path)) {
+    stop("Checkpoint not found: ", file_path, call. = FALSE)
   }
-  readRDS(path)
+  readRDS(file_path)
 }

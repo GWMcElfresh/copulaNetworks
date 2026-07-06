@@ -1,1 +1,5 @@
 /copulaNetworks_0.1.0.tar.gz
+inst/stan/*.exe
+inst/stan/*.hpp
+.Rproj.user
+docs/

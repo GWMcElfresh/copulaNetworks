@@ -1,0 +1,15 @@
+url: https://GWMcElfresh.github.io/copulaNetworks/
+template:
+  bootstrap: 5
+navbar:
+  structure:
+    left: [intro, reference, articles]
+    right: [search, github]
+  components:
+    github:
+      icon: fab fa-github
+      href: https://github.com/GWMcElfresh/copulaNetworks
+articles:
+  - title: Two-Phase Factor-Vine
+    contents:
+      - two-phase-factor-vine

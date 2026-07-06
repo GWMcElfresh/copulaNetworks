@@ -34,20 +34,20 @@ format_comparison_edge_label <- function(edges) {
 
 #' Select the most extreme points to label on comparison scatter plots
 #' @keywords internal
-select_comparison_labels <- function(cmp_df, label_threshold = 0.05, max_labels = 25) {
-  if (nrow(cmp_df) == 0) {
-    return(cmp_df)
+select_comparison_labels <- function(comparison_df, label_threshold = 0.05, max_labels = 25) {
+  if (nrow(comparison_df) == 0) {
+    return(comparison_df)
   }
 
-  cmp_df <- cmp_df %>%
+  comparison_df <- comparison_df %>%
     dplyr::mutate(
-      extreme_score = abs_delta + 0.15 * (abs(value_a) + abs(value_b))
+      extreme_score = absDelta + 0.15 * (abs(valueA) + abs(valueB))
     ) %>%
     dplyr::arrange(dplyr::desc(extreme_score))
 
-  label_df <- cmp_df %>% dplyr::filter(abs_delta >= label_threshold)
+  label_df <- comparison_df %>% dplyr::filter(absDelta >= label_threshold)
   if (nrow(label_df) == 0) {
-    label_df <- cmp_df
+    label_df <- comparison_df
   }
   label_df %>%
     dplyr::slice_head(n = max_labels) %>%
@@ -58,8 +58,8 @@ select_comparison_labels <- function(cmp_df, label_threshold = 0.05, max_labels 
 #' Bias repelled labels toward Q2/Q4 (sparse for signed correlations)
 #' @keywords internal
 add_quadrant_label_nudges <- function(label_df) {
-  xr <- range(label_df$value_b, na.rm = TRUE)
-  yr <- range(label_df$value_a, na.rm = TRUE)
+  xr <- range(label_df$valueB, na.rm = TRUE)
+  yr <- range(label_df$valueA, na.rm = TRUE)
   dx <- max(diff(xr), 0.05)
   dy <- max(diff(yr), 0.05)
 
@@ -74,32 +74,32 @@ add_quadrant_label_nudges <- function(label_df) {
 
 #' Build comparison scatter plot
 #' @keywords internal
-comparison_scatter_plot <- function(cmp_df,
-                                    label_a,
-                                    label_b,
+comparison_scatter_plot <- function(comparison_df,
+                                    labelA,
+                                    labelB,
                                     title,
                                     label_threshold = 0.05,
                                     max_labels = 25) {
-  cmp_df <- cmp_df %>%
+  comparison_df <- comparison_df %>%
     dplyr::mutate(
       direction = factor(direction, levels = unique(direction))
     )
 
-  xr <- range(cmp_df$value_b, na.rm = TRUE)
-  yr <- range(cmp_df$value_a, na.rm = TRUE)
+  xr <- range(comparison_df$valueB, na.rm = TRUE)
+  yr <- range(comparison_df$valueA, na.rm = TRUE)
   dx <- max(diff(xr), 0.05)
   dy <- max(diff(yr), 0.05)
 
-  p <- ggplot2::ggplot(cmp_df, ggplot2::aes(x = value_b, y = value_a, colour = direction)) +
+  scatter_plot <- ggplot2::ggplot(comparison_df, ggplot2::aes(x = valueB, y = valueA, colour = direction)) +
     ggplot2::geom_abline(slope = 1, intercept = 0, linetype = "dashed", colour = "grey60") +
     ggplot2::geom_hline(yintercept = 0, colour = "grey80") +
     ggplot2::geom_vline(xintercept = 0, colour = "grey80") +
-    ggplot2::geom_point(ggplot2::aes(size = abs_delta), alpha = 0.7) +
+    ggplot2::geom_point(ggplot2::aes(size = absDelta), alpha = 0.7) +
     ggplot2::scale_size_continuous(range = c(1, 5), name = "|\u0394|") +
     ggplot2::labs(
       title = title,
-      x = paste(label_b),
-      y = paste(label_a),
+      x = paste(labelB),
+      y = paste(labelA),
       colour = NULL
     ) +
     ggplot2::coord_cartesian(
@@ -112,12 +112,12 @@ comparison_scatter_plot <- function(cmp_df,
 
   if (requireNamespace("ggrepel", quietly = TRUE)) {
     label_df <- select_comparison_labels(
-      cmp_df,
+      comparison_df,
       label_threshold = label_threshold,
       max_labels = max_labels
     )
     if (nrow(label_df) > 0) {
-      p <- p + ggrepel::geom_label_repel(
+      scatter_plot <- scatter_plot + ggrepel::geom_label_repel(
         data = label_df,
         ggplot2::aes(label = label),
         nudge_x = label_df$nudge_x,
@@ -143,22 +143,22 @@ comparison_scatter_plot <- function(cmp_df,
     }
   }
 
-  p
+  scatter_plot
 }
 
 #' Build differential bar chart
 #' @keywords internal
-comparison_bar_plot <- function(cmp_df, label_a, label_b, title, delta_threshold = 0.05) {
-  bar_data <- cmp_df %>%
-    dplyr::filter(abs_delta > delta_threshold) %>%
+comparison_bar_plot <- function(comparison_df, labelA, labelB, title, delta_threshold = 0.05) {
+  bar_data <- comparison_df %>%
+    dplyr::filter(absDelta > delta_threshold) %>%
     tidyr::pivot_longer(
-      cols = c(value_a, value_b),
+      cols = c(valueA, valueB),
       names_to = "stratum",
       values_to = "value"
     ) %>%
     dplyr::mutate(
-      stratum = dplyr::recode(stratum, value_a = label_a, value_b = label_b),
-      edge = reorder(edge, abs_delta)
+      stratum = dplyr::recode(stratum, valueA = labelA, valueB = labelB),
+      edge = reorder(edge, absDelta)
     )
 
   if (nrow(bar_data) == 0) {
@@ -179,81 +179,93 @@ comparison_bar_plot <- function(cmp_df, label_a, label_b, title, delta_threshold
 
 #' Plot stratum comparison diagnostics
 #'
-#' @param cmp Output of [compare_two_strata()].
-#' @param out_dir Optional directory to save PNG files.
-#' @param label_threshold Minimum |delta| for edge labels in scatter plots.
-#' @param max_labels Maximum number of extreme pairs to label in scatter plots.
-#' @param delta_threshold Minimum |delta| for bar charts.
-#' @param width Plot width in inches.
-#' @param height Plot height in inches.
-#' @param dpi Resolution.
+#' @param cmp Output of [CompareTwoStrata()].
+#' @param outDir Optional directory to save PNG files.
+#' @param labelThreshold Minimum |delta| for edge labels in scatter plots.
+#' @param maxLabels Maximum number of extreme pairs to label in scatter plots.
+#' @param deltaThreshold Minimum |delta| for bar charts.
+#' @param width Default save width in inches (scatter and bar plots).
+#' @param height Default save height in inches (scatter and bar plots).
+#' @param scatterWidth Optional scatter plot width override.
+#' @param scatterHeight Optional scatter plot height override.
+#' @param barWidth Optional bar plot width override.
+#' @param barHeight Optional bar plot height override.
+#' @param dpi Resolution for saved PNG files.
 #' @return List with `plots` keyed by matrix type (each containing `scatter` and `bar`).
 #' @export
-plot_stratum_comparison <- function(cmp,
-                                     out_dir = NULL,
-                                     label_threshold = 0.05,
-                                     max_labels = 25,
-                                     delta_threshold = 0.05,
-                                     width = 16,
-                                     height = 11,
-                                     dpi = 150) {
-  if (!inherits(cmp, "copula_stratum_comparison") && !is.list(cmp)) {
-    stop("cmp must be output of compare_two_strata().", call. = FALSE)
+PlotStratumComparison <- function(cmp,
+                                  outDir = NULL,
+                                  labelThreshold = 0.05,
+                                  maxLabels = 25,
+                                  deltaThreshold = 0.05,
+                                  width = 16,
+                                  height = 11,
+                                  scatterWidth = NULL,
+                                  scatterHeight = NULL,
+                                  barWidth = NULL,
+                                  barHeight = NULL,
+                                  dpi = 150) {
+  if (!inherits(cmp, "CopulaStratumComparison") && !is.list(cmp)) {
+    stop("cmp must be output of CompareTwoStrata().", call. = FALSE)
   }
 
   plots <- list()
 
   for (mat_name in names(cmp)) {
-    cmp_df <- cmp[[mat_name]]
-    if (nrow(cmp_df) == 0) {
+    comparison_df <- cmp[[mat_name]]
+    if (nrow(comparison_df) == 0) {
       next
     }
 
-    label_a <- cmp_df$label_a[1]
-    label_b <- cmp_df$label_b[1]
+    label_a <- comparison_df$labelA[1]
+    label_b <- comparison_df$labelB[1]
     mat_label <- if (mat_name == "pcor") "Partial Correlation" else "Copula Correlation"
 
-    p_scatter <- comparison_scatter_plot(
-      cmp_df,
-      label_a = label_a,
-      label_b = label_b,
+    scatter_plot <- comparison_scatter_plot(
+      comparison_df,
+      labelA = label_a,
+      labelB = label_b,
       title = paste(mat_label, "Comparison:", label_a, "vs.", label_b),
-      label_threshold = label_threshold,
-      max_labels = max_labels
+      label_threshold = labelThreshold,
+      max_labels = maxLabels
     )
 
-    p_bar <- comparison_bar_plot(
-      cmp_df,
-      label_a = label_a,
-      label_b = label_b,
-      title = paste("Differential Pairs (|", "\u0394", "| > ", delta_threshold, "): ",
+    bar_plot <- comparison_bar_plot(
+      comparison_df,
+      labelA = label_a,
+      labelB = label_b,
+      title = paste("Differential Pairs (|", "\u0394", "| > ", deltaThreshold, "): ",
                     label_a, " vs. ", label_b, sep = ""),
-      delta_threshold = delta_threshold
+      delta_threshold = deltaThreshold
     )
 
-    plots[[mat_name]] <- list(scatter = p_scatter, bar = p_bar)
+    plots[[mat_name]] <- list(scatter = scatter_plot, bar = bar_plot)
 
-    if (!is.null(out_dir)) {
-      if (!dir.exists(out_dir)) {
-        dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+    if (!is.null(outDir)) {
+      if (!dir.exists(outDir)) {
+        dir.create(outDir, recursive = TRUE, showWarnings = FALSE)
       }
+      scatter_width <- resolve_dim(width, scatterWidth)
+      scatter_height <- resolve_dim(height, scatterHeight)
+      bar_width <- resolve_dim(width, barWidth)
+      bar_height <- resolve_dim(height, barHeight)
       copula_ggsave(
-        file.path(out_dir, paste0(mat_name, "_scatter.png")),
-        plot = p_scatter,
-        width = width,
-        height = height,
+        file.path(outDir, paste0(mat_name, "_scatter.png")),
+        plot = scatter_plot,
+        width = scatter_width,
+        height = scatter_height,
         dpi = dpi
       )
-      if (!is.null(p_bar)) {
+      if (!is.null(bar_plot)) {
         copula_ggsave(
-          file.path(out_dir, paste0(mat_name, "_bar.png")),
-          plot = p_bar,
-          width = width,
-          height = height,
+          file.path(outDir, paste0(mat_name, "_bar.png")),
+          plot = bar_plot,
+          width = bar_width,
+          height = bar_height,
           dpi = dpi
         )
       }
-      message("Saved comparison plots to: ", out_dir)
+      message("Saved comparison plots to: ", outDir)
     }
   }
 
