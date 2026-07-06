@@ -43,15 +43,6 @@ jobs:
         run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
         shell: Rscript {0}
 
-      # #region agent log
-      - name: Verify tutorial artifact
-        if: github.event_name != 'pull_request'
-        run: |
-          test -f docs/articles/two-phase-factor-vine.html
-          echo "tutorial_bytes=$(wc -c < docs/articles/two-phase-factor-vine.html)" >> "$GITHUB_OUTPUT"
-        id: tutorial_check
-      # #endregion
-
       - name: Upload website artifact
         if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
