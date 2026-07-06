@@ -16,7 +16,7 @@ CheckFactorStructure <- function(corMatrix, nFactors = 1L) {
     warning(
       "First ", nFactors, " factor(s) explain only ",
       round(100 * cum_var[nFactors], 1),
-      "% of correlation variance — factor model may be inadequate.",
+      "% of correlation variance - factor model may be inadequate.",
       call. = FALSE
     )
   }
@@ -74,11 +74,14 @@ FitFactorCopulaPrior <- function(data,
   uniform_matrix <- UniformMarginalTransform(input_matrix)
   continuous_data <- qnorm(uniform_matrix)
 
-  gl <- if (requireNamespace("statmod", quietly = TRUE)) {
-    statmod::gauss.quad.prob(nQuad)
-  } else {
-    FactorCopula::gauss.quad.prob(nQuad)
+  if (!requireNamespace("statmod", quietly = TRUE)) {
+    stop(
+      "Package 'statmod' is required for FitFactorCopulaPrior(). ",
+      "Install with install.packages('statmod').",
+      call. = FALSE
+    )
   }
+  gl <- statmod::gauss.quad.prob(nQuad)
   cop_f1 <- rep(linkingCopula, n_vars)
 
   factor_fit <- if (nFactors == 1L) {

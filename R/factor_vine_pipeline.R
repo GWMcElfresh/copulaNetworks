@@ -87,7 +87,7 @@ RunFactorVinePipeline <- function(priorData,
           consistency_test$bayesFactor <- consistency_test$bayes$bayesFactor$logMargLik
         }
       } else if (test_method %in% c("bayes", "both")) {
-        warning("cmdstanr not installed — skipping Bayesian consistency test.", call. = FALSE)
+        warning("cmdstanr not installed - skipping Bayesian consistency test.", call. = FALSE)
       }
 
       if (test_method == "simulation" && !is.null(consistency_test$simulation)) {

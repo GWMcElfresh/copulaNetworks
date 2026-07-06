@@ -41,7 +41,7 @@ FitStratumCopula <- function(data,
   column_variances <- apply(input_matrix, 2, var, na.rm = TRUE)
   keep <- column_variances > 1e-10
   if (sum(keep) < 3) {
-    warning("Fewer than 3 non-constant variables in stratum — skipping.", call. = FALSE)
+    warning("Fewer than 3 non-constant variables in stratum - skipping.", call. = FALSE)
     return(NULL)
   }
   input_matrix <- input_matrix[, keep, drop = FALSE]
@@ -113,7 +113,7 @@ FitCopulaStrata <- function(prep,
     stratum_data <- prep$strata[[nm]]
     n_obs <- nrow(stratum_data)
     if (n_obs < minN) {
-      warning("Skipping stratum '", nm, "' — only ", n_obs, " observations (minN = ", minN, ").",
+      warning("Skipping stratum '", nm, "' - only ", n_obs, " observations (minN = ", minN, ").",
               call. = FALSE)
       next
     }
