@@ -1,0 +1,9 @@
+pandoc: 3.8.3
+pkgdown: 2.2.0
+pkgdown_sha: ~
+articles:
+  two-phase-factor-vine: two-phase-factor-vine.html
+last_built: 2026-07-06T13:43Z
+urls:
+  reference: https://GWMcElfresh.github.io/copulaNetworks/reference
+  article: https://GWMcElfresh.github.io/copulaNetworks/articles

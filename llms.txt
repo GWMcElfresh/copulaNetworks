@@ -1,0 +1,100 @@
+# copulaNetworks
+
+Stratified and two-phase copula network modeling for high-dimensional
+dependence.
+
+## Features
+
+- **Stratified workflow** (`RunCopulaPipeline`): nonparanormal graphical
+  lasso networks per stratum
+- **Two-phase factor-vine** (`RunFactorVinePipeline`): large-sample
+  factor copula prior + small-sample graphical/vine update
+
+## Documentation
+
+Full tutorial: [Two-Phase Factor-Vine
+Vignette](https://GWMcElfresh.github.io/copulaNetworks/articles/two-phase-factor-vine.html)
+
+## Quick start
+
+``` r
+
+library(copulaNetworks)
+# See vignette and inst/examples/example_factor_vine.R
+```
+
+# Package index
+
+## All functions
+
+- [`ApplyMarginalSpec()`](https://GWMcElfresh.github.io/copulaNetworks/reference/ApplyMarginalSpec.md)
+  : Map update values through a prior marginal specification
+- [`BuildStrata()`](https://GWMcElfresh.github.io/copulaNetworks/reference/BuildStrata.md)
+  : Build named strata from a declarative recipe
+- [`CheckFactorStructure()`](https://GWMcElfresh.github.io/copulaNetworks/reference/CheckFactorStructure.md)
+  : Check whether a correlation matrix is consistent with a low-rank
+  factor structure
+- [`ComparePairwiseMatrices()`](https://GWMcElfresh.github.io/copulaNetworks/reference/ComparePairwiseMatrices.md)
+  : Compare pairwise matrix values across two strata
+- [`ComparePriorToUpdate()`](https://GWMcElfresh.github.io/copulaNetworks/reference/ComparePriorToUpdate.md)
+  : Compare prior factor model to Phase 2 update fit
+- [`CompareTwoStrata()`](https://GWMcElfresh.github.io/copulaNetworks/reference/CompareTwoStrata.md)
+  : Compare two fitted strata across matrix types
+- [`ExtractEdges()`](https://GWMcElfresh.github.io/copulaNetworks/reference/ExtractEdges.md)
+  : Extract edge list from a copula fit result
+- [`FactorGroupsFromLoadings()`](https://GWMcElfresh.github.io/copulaNetworks/reference/FactorGroupsFromLoadings.md)
+  : Group variables by factor loading structure
+- [`FitBayesianFactorUpdate()`](https://GWMcElfresh.github.io/copulaNetworks/reference/FitBayesianFactorUpdate.md)
+  : Bayesian Gaussian copula update with priors centered at Phase 1
+- [`FitCopulaStrata()`](https://GWMcElfresh.github.io/copulaNetworks/reference/FitCopulaStrata.md)
+  : Fit copula models across prepared strata
+- [`FitCopulaUpdate()`](https://GWMcElfresh.github.io/copulaNetworks/reference/FitCopulaUpdate.md)
+  : Fit Phase 2 copula update on a small sample
+- [`FitFactorCopulaPrior()`](https://GWMcElfresh.github.io/copulaNetworks/reference/FitFactorCopulaPrior.md)
+  : Fit a factor copula prior on a large reference sample (Phase 1)
+- [`FitMarginalSpec()`](https://GWMcElfresh.github.io/copulaNetworks/reference/FitMarginalSpec.md)
+  : Fit marginal specification from a prior (large) sample
+- [`FitStratumCopula()`](https://GWMcElfresh.github.io/copulaNetworks/reference/FitStratumCopula.md)
+  : Fit a nonparanormal graphical model on one stratum
+- [`FitVineCopulaUpdate()`](https://GWMcElfresh.github.io/copulaNetworks/reference/FitVineCopulaUpdate.md)
+  : Fit a vine copula update on uniform pseudo-observations (Phase 2a)
+- [`ImpliedFactorCorrelation()`](https://GWMcElfresh.github.io/copulaNetworks/reference/ImpliedFactorCorrelation.md)
+  : Build an approximate correlation matrix from factor loadings
+- [`LoadCheckpoint()`](https://GWMcElfresh.github.io/copulaNetworks/reference/LoadCheckpoint.md)
+  : Load a checkpoint RDS file
+- [`NonparanormalTransform()`](https://GWMcElfresh.github.io/copulaNetworks/reference/NonparanormalTransform.md)
+  : Nonparanormal transformation (rank-based Gaussian copula marginals)
+- [`PlotAllStrata()`](https://GWMcElfresh.github.io/copulaNetworks/reference/PlotAllStrata.md)
+  : Plot diagnostics for all fitted strata
+- [`PlotCopulaCorHeatmap()`](https://GWMcElfresh.github.io/copulaNetworks/reference/PlotCopulaCorHeatmap.md)
+  : Plot copula correlation heatmap
+- [`PlotCopulaNetwork()`](https://GWMcElfresh.github.io/copulaNetworks/reference/PlotCopulaNetwork.md)
+  : Plot a copula network using ggraph
+- [`PlotPcorHeatmap()`](https://GWMcElfresh.github.io/copulaNetworks/reference/PlotPcorHeatmap.md)
+  : Plot partial correlation heatmap
+- [`PlotStratumComparison()`](https://GWMcElfresh.github.io/copulaNetworks/reference/PlotStratumComparison.md)
+  : Plot stratum comparison diagnostics
+- [`PlotStratumDiagnostics()`](https://GWMcElfresh.github.io/copulaNetworks/reference/PlotStratumDiagnostics.md)
+  : Plot single-stratum diagnostics (network + heatmaps)
+- [`PrepareCopulaData()`](https://GWMcElfresh.github.io/copulaNetworks/reference/PrepareCopulaData.md)
+  : Prepare data and strata for copula modeling (Step 0)
+- [`RunCopulaPipeline()`](https://GWMcElfresh.github.io/copulaNetworks/reference/RunCopulaPipeline.md)
+  : Run the full stratified copula pipeline
+- [`RunFactorVinePipeline()`](https://GWMcElfresh.github.io/copulaNetworks/reference/RunFactorVinePipeline.md)
+  : Run the full two-phase factor-vine copula pipeline
+- [`SaveCheckpoint()`](https://GWMcElfresh.github.io/copulaNetworks/reference/SaveCheckpoint.md)
+  : Save a checkpoint RDS file
+- [`SimulateFactorCopula()`](https://GWMcElfresh.github.io/copulaNetworks/reference/SimulateFactorCopula.md)
+  : Simulate data from a fitted factor copula prior
+- [`TestPriorConsistency()`](https://GWMcElfresh.github.io/copulaNetworks/reference/TestPriorConsistency.md)
+  : Test whether update data are consistent with the Phase 1 factor
+  prior
+- [`UniformMarginalTransform()`](https://GWMcElfresh.github.io/copulaNetworks/reference/UniformMarginalTransform.md)
+  : Transform each column to uniform margins via ranks
+
+# Articles
+
+### Two-Phase Factor-Vine
+
+- [Two-Phase Factor-Vine Copula
+  Networks](https://GWMcElfresh.github.io/copulaNetworks/articles/two-phase-factor-vine.md):
