@@ -43,7 +43,7 @@ BuildStrata <- function(data, spec, specName = "strata") {
       if (nrow(sub) >= min_n) {
         strata[[lv]] <- sub
       } else {
-        warning("Dropping stratum '", lv, "' in ", specName, " — n = ", nrow(sub),
+        warning("Dropping stratum '", lv, "' in ", specName, " - n = ", nrow(sub),
                 " < minN = ", min_n, ".", call. = FALSE)
       }
     }
@@ -75,7 +75,7 @@ BuildStrata <- function(data, spec, specName = "strata") {
   for (stratum_name in names(strata)) {
     strata[[stratum_name]] <- strata[[stratum_name]][, setdiff(colnames(strata[[stratum_name]]), ".stratum_name"), drop = FALSE]
     if (nrow(strata[[stratum_name]]) < min_n) {
-      warning("Dropping stratum '", stratum_name, "' in ", specName, " — n = ", nrow(strata[[stratum_name]]),
+      warning("Dropping stratum '", stratum_name, "' in ", specName, " - n = ", nrow(strata[[stratum_name]]),
               " < minN = ", min_n, ".", call. = FALSE)
       strata[[stratum_name]] <- NULL
     }

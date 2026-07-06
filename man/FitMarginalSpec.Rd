@@ -16,6 +16,6 @@ List with \code{method}, \code{nRef}, \code{knots}, and \code{nodeCols}.
 }
 \description{
 Stores empirical rank knots per column so update data can be mapped through
-the prior ECDF. Covariate-adjusted marginals are deferred — supply
+the prior ECDF. Covariate-adjusted marginals are deferred - supply
 pre-adjusted residuals in \code{priorMatrix}.
 }

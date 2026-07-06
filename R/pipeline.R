@@ -97,7 +97,7 @@ RunCopulaPipeline <- function(data,
       nm_b <- pair[2]
       if (!all(c(nm_a, nm_b) %in% names(fit_results$fits))) {
         warning(
-          "Comparison pair not found in fits: ", nm_a, " vs ", nm_b, " — skipping.",
+          "Comparison pair not found in fits: ", nm_a, " vs ", nm_b, " - skipping.",
           call. = FALSE
         )
         next

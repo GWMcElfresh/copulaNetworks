@@ -29,7 +29,7 @@ UniformMarginalTransform <- function(inputMatrix, nRef = NULL) {
 #' Fit marginal specification from a prior (large) sample
 #'
 #' Stores empirical rank knots per column so update data can be mapped through
-#' the prior ECDF. Covariate-adjusted marginals are deferred — supply
+#' the prior ECDF. Covariate-adjusted marginals are deferred - supply
 #' pre-adjusted residuals in `priorMatrix`.
 #'
 #' @param priorMatrix Numeric matrix or data frame (N x d) from the prior cohort.
