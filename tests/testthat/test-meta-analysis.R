@@ -69,6 +69,19 @@ test_that("RunDiscountSensitivity grid has expected dimensions", {
   expect_equal(dim(sens$corMatrices[[1]]), c(6, 6))
 })
 
+test_that("RunDiscountSensitivity cor matrices are finite at a0 = 0", {
+  skip_if_not_installed("powerprior")
+  blocks <- make_meta_cohorts(d = 6)
+  nodes <- paste0("node", 1:6)
+  meta_prior <- FitMetaCorPrior(blocks$historicalCohorts, nodeCols = nodes)
+  sens <- RunDiscountSensitivity(
+    meta_prior,
+    blocks$updateData,
+    a0Values = c(0, 0.5, 1)
+  )
+  expect_true(all(is.finite(sens$corMatrices[["0"]])))
+})
+
 test_that("RunMetaAnalysisPipeline runs end-to-end", {
   skip_if_not_installed("powerprior")
   blocks <- make_meta_cohorts(d = 6)

@@ -42,7 +42,18 @@
   pp
 }
 
-.cor_from_niw <- function(niw_obj) {
+.sanitize_cor_matrix <- function(cor_mat, fallback = NULL) {
+  cor_mat <- as.matrix(cor_mat)
+  if (!all(is.finite(cor_mat)) && !is.null(fallback)) {
+    cor_mat <- as.matrix(fallback)
+  }
+  cor_mat[!is.finite(cor_mat)] <- 0
+  diag(cor_mat) <- 1
+  cor_mat <- (cor_mat + t(cor_mat)) / 2
+  stats::cov2cor(cor_mat)
+}
+
+.cor_from_niw <- function(niw_obj, fallback = NULL) {
   lambda_mat <- if (!is.null(niw_obj$Lambda_star)) {
     niw_obj$Lambda_star
   } else {
@@ -59,7 +70,8 @@
   sigma_hat <- lambda_mat / denom
   ridge <- max(1e-4, 1e-6 * mean(diag(sigma_hat), na.rm = TRUE))
   sigma_adj <- sigma_hat + diag(ridge, p)
-  suppressWarnings(stats::cov2cor(sigma_adj))
+  cor_mat <- suppressWarnings(stats::cov2cor(sigma_adj))
+  .sanitize_cor_matrix(cor_mat, fallback = fallback)
 }
 
 #' Fit a meta-analytic correlation prior from multiple historical cohorts
@@ -111,7 +123,8 @@ FitMetaCorPrior <- function(historicalCohorts, nodeCols, a0 = NULL) {
   names(z_list) <- names(historicalCohorts)
 
   pp <- .sequential_power_prior(z_list, a0)
-  implied_cor <- .cor_from_niw(pp)
+  z_pooled <- do.call(rbind, z_list)
+  implied_cor <- .cor_from_niw(pp, fallback = stats::cor(z_pooled))
   colnames(implied_cor) <- rownames(implied_cor) <- nodeCols
 
   cohort_summaries <- data.frame(
@@ -150,7 +163,7 @@ FitBayesianMetaUpdate <- function(metaPrior, updateData) {
   node_cols <- metaPrior$nodeCols
   z_update <- .cohort_to_normal_scores(updateData, metaPrior$marginalSpec, node_cols)
   posterior <- powerprior::posterior_multivariate(metaPrior$powerPrior, z_update)
-  implied_cor <- .cor_from_niw(posterior)
+  implied_cor <- .cor_from_niw(posterior, fallback = stats::cor(z_update))
   colnames(implied_cor) <- rownames(implied_cor) <- node_cols
   list(
     posterior = posterior,
