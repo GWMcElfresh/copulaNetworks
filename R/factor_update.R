@@ -1,15 +1,19 @@
 #' Build a pseudo graphical fit from an implied correlation matrix
 #'
+#' Converts an implied correlation matrix (e.g. from a factor copula prior) into
+#' the structure expected by [PlotCopulaNetwork()] and the heatmap helpers.
+#'
 #' @param impliedCor Symmetric correlation matrix.
 #' @param nObs Reference sample size for metadata.
-#' @keywords internal
-build_prior_pseudo_fit <- function(impliedCor, nObs = NA_integer_) {
+#' @return List with `copulaCor`, `pcor`, `adjacency`, `keptCols`, and related fields.
+#' @export
+PseudoGraphicalFitFromCor <- function(impliedCor, nObs = NA_integer_) {
   cor_mat <- as.matrix(impliedCor)
   kept_cols <- colnames(cor_mat)
   n_vars <- ncol(cor_mat)
 
   if (n_vars < 3) {
-  stop("Implied correlation matrix must have at least 3 variables.", call. = FALSE)
+    stop("Implied correlation matrix must have at least 3 variables.", call. = FALSE)
   }
 
   precision <- tryCatch(
@@ -107,7 +111,7 @@ ComparePriorToUpdate <- function(priorFit, updateFit, deltaThreshold = 0.05) {
   if (is.null(updateFit$graphical)) {
     stop("updateFit$graphical is required for ComparePriorToUpdate().", call. = FALSE)
   }
-  prior_pseudo <- build_prior_pseudo_fit(priorFit$impliedCor, nObs = priorFit$n)
+  prior_pseudo <- PseudoGraphicalFitFromCor(priorFit$impliedCor, nObs = priorFit$n)
   CompareTwoStrata(
     prior_pseudo,
     updateFit$graphical,
