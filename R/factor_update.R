@@ -51,7 +51,8 @@ PseudoGraphicalFitFromCor <- function(impliedCor, nObs = NA_integer_) {
 #' copula on the update cohort.
 #'
 #' @param updateData Data frame with node columns for the update cohort.
-#' @param priorFit Output of [FitFactorCopulaPrior()].
+#' @param priorFit Prior fit with `marginalSpec`, `impliedCor`, and `nodeCols`
+#'   (from [FitFactorCopulaPrior()] or [FitMetaCorPrior()]).
 #' @param method One of `"graphical"`, `"vine"`, or `"both"`.
 #' @param nlambda Number of lambda values for glasso (graphical path).
 #' @param glassoMethod Lambda selection for graphical path.
@@ -87,11 +88,21 @@ FitCopulaUpdate <- function(updateData,
   }
 
   if (method %in% c("vine", "both")) {
-    factor_groups <- FactorGroupsFromLoadings(priorFit$loadings, k = priorFit$nFactors)
-    result$vine <- FitVineCopulaUpdate(
-      uniform_matrix,
-      factorGroups = factor_groups
-    )
+    if (is.null(priorFit$loadings)) {
+      if (method == "vine") {
+        stop(
+          "priorFit$loadings is required for vine update (e.g. FitFactorCopulaPrior()).",
+          call. = FALSE
+        )
+      }
+    } else {
+      n_factors <- if (is.null(priorFit$nFactors)) 1L else priorFit$nFactors
+      factor_groups <- FactorGroupsFromLoadings(priorFit$loadings, k = n_factors)
+      result$vine <- FitVineCopulaUpdate(
+        uniform_matrix,
+        factorGroups = factor_groups
+      )
+    }
   }
 
   result
@@ -102,7 +113,8 @@ FitCopulaUpdate <- function(updateData,
 #' Builds a pseudo-fit from the prior implied correlation and delegates to
 #' [CompareTwoStrata()].
 #'
-#' @param priorFit Output of [FitFactorCopulaPrior()].
+#' @param priorFit Prior fit with `impliedCor` and `n` ([FitFactorCopulaPrior()]
+#'   or [FitMetaCorPrior()]).
 #' @param updateFit Output of [FitCopulaUpdate()].
 #' @param deltaThreshold Threshold for direction labels.
 #' @return A `CopulaStratumComparison` object.

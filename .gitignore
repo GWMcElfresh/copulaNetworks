@@ -1,5 +1,8 @@
-/copulaNetworks_0.1.0.tar.gz
+/copulaNetworks_*.tar.gz
 inst/stan/*.exe
 inst/stan/*.hpp
 .Rproj.user
 docs/
+vignettes/*.html
+vignettes/*.knit.md
+vignettes/*_files/

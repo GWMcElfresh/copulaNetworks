@@ -14,10 +14,13 @@ PlotCopulaCorHeatmap <- function(result, title = "Copula Correlation Matrix", va
     vars <- intersect(vars, colnames(mat))
     mat <- mat[vars, vars, drop = FALSE]
   }
+  mat[!is.finite(mat)] <- 0
+  diag(mat) <- 1
+  can_cluster <- nrow(mat) > 1L && all(is.finite(mat))
   pheatmap::pheatmap(
     mat,
-    cluster_rows = TRUE,
-    cluster_cols = TRUE,
+    cluster_rows = can_cluster,
+    cluster_cols = can_cluster,
     color = grDevices::colorRampPalette(c("blue", "white", "red"))(100),
     breaks = seq(-1, 1, length.out = 101),
     main = title,

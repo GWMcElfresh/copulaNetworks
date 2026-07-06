@@ -1,13 +1,15 @@
 Package: copulaNetworks
 Title: Stratified Nonparanormal Copula Networks
-Version: 0.3.0
+Version: 0.4.0
 Authors@R: person("GW", "McElfresh", email = "mcelfreshgw@gmail.com", role = c("aut", "cre"))
 Description: Fit and visualize stratified nonparanormal Gaussian copula
     graphical models using graphical lasso (glasso) with StARS model
     selection. Supports declarative stratification, single-stratum
-    diagnostics, and cross-stratum structure comparison. v0.3.0 adds
-    a two-phase factor-vine workflow (large-sample factor copula prior
-    plus small-sample graphical or vine update) with simulation and
+    diagnostics, and cross-stratum structure comparison. v0.4.0 adds
+    Bayesian meta-analysis of multiple historical cohorts via multivariate
+    power priors (powerprior package) with small-sample graphical update.
+    v0.3.0 adds a two-phase factor-vine workflow (large-sample factor copula
+    prior plus small-sample graphical or vine update) with simulation and
     optional Bayesian consistency testing.
 License: MIT + file LICENSE
 Encoding: UTF-8
@@ -33,6 +35,7 @@ Suggests:
     FactorCopula,
     knitr,
     pkgdown,
+    powerprior,
     rmarkdown,
     statmod,
     cmdstanr,
@@ -43,4 +46,4 @@ Remotes: stan-dev/cmdstanr
 Config/testthat/edition: 3
 Config/roxygen2/version: 8.0.0
 Config/Needs/website: pkgdown, knitr, rmarkdown
-Config/Needs/check: testthat, stan-dev/cmdstanr, FactorCopula, knitr, rmarkdown
+Config/Needs/check: testthat, stan-dev/cmdstanr, FactorCopula, powerprior, knitr, rmarkdown

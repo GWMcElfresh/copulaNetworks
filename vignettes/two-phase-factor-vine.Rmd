@@ -17,6 +17,13 @@ knitr::opts_chunk$set(
   fig.height = 5,
   fig.align = "center"
 )
+
+# pheatmap grobs must be drawn explicitly for knitr figure capture
+draw_pheatmap <- function(grob) {
+  grid::grid.newpage()
+  grid::grid.draw(if (!is.null(grob$gtable)) grob$gtable else grob)
+  invisible(NULL)
+}
 ```
 
 ## Motivation
@@ -125,28 +132,24 @@ The Phase 1 factor model implies a **dense** correlation structure (every pair
 linked through the latent factor). Implied correlation heatmap:
 
 ```{r phase1-heatmap, eval=has_factor, fig.cap="Phase 1 factor-implied correlation"}
-if (has_factor) {
-  grid::grid.draw(
-    PlotCopulaCorHeatmap(
-      list(copulaCor = prior_fit$impliedCor, keptCols = nodes),
-      title = "Phase 1 implied correlation"
-    )
+draw_pheatmap(
+  PlotCopulaCorHeatmap(
+    list(copulaCor = prior_fit$impliedCor, keptCols = nodes),
+    title = "Phase 1 implied correlation"
   )
-}
+)
 ```
 
 Prior implied network (pseudo-graphical fit from implied correlation):
 
 ```{r phase1-network, eval=has_factor, fig.cap="Phase 1 factor-implied network"}
-if (has_factor) {
-  prior_pseudo <- PseudoGraphicalFitFromCor(prior_fit$impliedCor, nObs = prior_fit$n)
-  PlotCopulaNetwork(
-    prior_pseudo,
-    title = "Phase 1 prior (implied)",
-    nodeGroups = node_groups,
-    printPlot = FALSE
-  )
-}
+prior_pseudo <- PseudoGraphicalFitFromCor(prior_fit$impliedCor, nObs = prior_fit$n)
+print(PlotCopulaNetwork(
+  prior_pseudo,
+  title = "Phase 1 prior (implied)",
+  nodeGroups = node_groups,
+  printPlot = FALSE
+))
 ```
 
 ## Phase 2(a): Vine update
@@ -179,40 +182,34 @@ On the small update sample, glasso yields a **sparse** graphical model. Copula
 correlation heatmap:
 
 ```{r phase2-cor-heatmap, eval=has_factor, fig.cap="Phase 2 update copula correlation"}
-if (has_factor && !is.null(update_fit$graphical)) {
-  grid::grid.draw(
-    PlotCopulaCorHeatmap(
-      update_fit$graphical,
-      title = "Phase 2 update copula correlation"
-    )
+draw_pheatmap(
+  PlotCopulaCorHeatmap(
+    update_fit$graphical,
+    title = "Phase 2 update copula correlation"
   )
-}
+)
 ```
 
 Partial correlation heatmap (glasso estimate):
 
 ```{r phase2-pcor-heatmap, eval=has_factor, fig.cap="Phase 2 update partial correlation"}
-if (has_factor && !is.null(update_fit$graphical)) {
-  grid::grid.draw(
-    PlotPcorHeatmap(
-      update_fit$graphical,
-      title = "Phase 2 update partial correlation"
-    )
+draw_pheatmap(
+  PlotPcorHeatmap(
+    update_fit$graphical,
+    title = "Phase 2 update partial correlation"
   )
-}
+)
 ```
 
 Sparse update network:
 
 ```{r network-plot, eval=has_factor, fig.cap="Phase 2 update graphical network"}
-if (has_factor && !is.null(update_fit$graphical)) {
-  PlotCopulaNetwork(
-    update_fit$graphical,
-    title = "Phase 2 update",
-    nodeGroups = node_groups,
-    printPlot = FALSE
-  )
-}
+print(PlotCopulaNetwork(
+  update_fit$graphical,
+  title = "Phase 2 update",
+  nodeGroups = node_groups,
+  printPlot = FALSE
+))
 ```
 
 ## Prior vs update comparison
@@ -226,25 +223,21 @@ cmp_plots <- PlotStratumComparison(cmp)
 Partial-correlation scatter (prior implied vs update glasso):
 
 ```{r comparison-pcor-scatter, eval=has_factor, fig.cap="Partial correlation: prior vs update", fig.width=8, fig.height=6}
-if (has_factor) {
-  cmp_plots$plots$pcor$scatter
-}
+print(cmp_plots$plots$pcor$scatter)
 ```
 
 Largest differential partial-correlation pairs:
 
 ```{r comparison-pcor-bar, eval=has_factor, fig.cap="Differential partial correlation pairs", fig.width=8, fig.height=6}
-if (has_factor && !is.null(cmp_plots$plots$pcor$bar)) {
-  cmp_plots$plots$pcor$bar
+if (!is.null(cmp_plots$plots$pcor$bar)) {
+  print(cmp_plots$plots$pcor$bar)
 }
 ```
 
 Copula-correlation scatter (prior implied vs update empirical):
 
 ```{r comparison-cor-scatter, eval=has_factor, fig.cap="Copula correlation: prior vs update", fig.width=8, fig.height=6}
-if (has_factor) {
-  cmp_plots$plots$copulaCor$scatter
-}
+print(cmp_plots$plots$copulaCor$scatter)
 ```
 
 ## Frequentist consistency test
@@ -264,15 +257,21 @@ abline(v = gof$obsStat, col = "red", lwd = 2)
 ## Bayesian update
 
 ```{r bayes, eval=has_factor && has_cmdstanr, message=FALSE, warning=FALSE}
-if (has_factor && has_cmdstanr) {
-  bayes_fit <- FitBayesianFactorUpdate(
+bayes_fit <- tryCatch(
+  FitBayesianFactorUpdate(
     prior_fit,
     updateData,
     chains = 2,
     iter = 500,
     computeBayesFactor = requireNamespace("bridgesampling", quietly = TRUE),
     seed = 1
-  )
+  ),
+  error = function(e) {
+    message("Bayesian update skipped: ", conditionMessage(e))
+    NULL
+  }
+)
+if (!is.null(bayes_fit)) {
   head(bayes_fit$summary)
 }
 ```

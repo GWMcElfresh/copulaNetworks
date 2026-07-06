@@ -172,10 +172,29 @@ test_that("FitBayesianFactorUpdate runs on synthetic data", {
 })
 
 # --- Built vignette (R CMD check installs doc/, not vignettes/) ---
-test_that("factor-vine vignette is built with required sections", {
+test_that("factor-vine vignette is built with required sections and figures", {
   v_path <- system.file("doc", "two-phase-factor-vine.html", package = "copulaNetworks")
-  expect_true(nzchar(v_path), info = "Built vignette HTML missing from inst/doc")
+  if (!nzchar(v_path)) {
+    pkg_root <- normalizePath(file.path(testthat::test_path(), "..", ".."), winslash = "/")
+    candidates <- c(
+      file.path(pkg_root, "inst", "doc", "two-phase-factor-vine.html"),
+      file.path(pkg_root, "vignettes", "two-phase-factor-vine.html")
+    )
+    v_path <- candidates[file.exists(candidates)][1]
+  }
+  skip_if_not(
+    length(v_path) == 1 && nzchar(v_path) && file.exists(v_path),
+    "Vignette HTML not built (run tools::buildVignettes() or R CMD build)"
+  )
   v <- readLines(v_path)
   expect_true(any(grepl("Phase 1", v)))
   expect_true(any(grepl("RunFactorVinePipeline", v)))
+  expect_true(
+    any(grepl("<img", v)),
+    info = "Vignette HTML has no embedded figures"
+  )
+  expect_true(
+    any(grepl("Phase 1 factor-implied network", v)),
+    info = "Prior network figure missing from vignette"
+  )
 })

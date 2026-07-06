@@ -16,7 +16,8 @@ FitCopulaUpdate(
 \arguments{
 \item{updateData}{Data frame with node columns for the update cohort.}
 
-\item{priorFit}{Output of \code{\link[=FitFactorCopulaPrior]{FitFactorCopulaPrior()}}.}
+\item{priorFit}{Prior fit with \code{marginalSpec}, \code{impliedCor}, and \code{nodeCols}
+(from \code{\link[=FitFactorCopulaPrior]{FitFactorCopulaPrior()}} or \code{\link[=FitMetaCorPrior]{FitMetaCorPrior()}}).}
 
 \item{method}{One of \code{"graphical"}, \code{"vine"}, or \code{"both"}.}
 
