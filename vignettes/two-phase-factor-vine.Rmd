@@ -14,7 +14,8 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.width = 7,
-  fig.height = 5
+  fig.height = 5,
+  fig.align = "center"
 )
 ```
 
@@ -24,14 +25,18 @@ Modern copula models use latent factors to handle high-dimensional dependence.
 In a **two-phase** workflow we fit a parsimonious factor copula on a **large**
 reference cohort (Phase 1), then update with a graphical model or vine copula on
 a **small** new sample (Phase 2), testing whether the update is consistent with
-the prior. See `factor_vine_plan.md` in the package source for literature
-context.
+the prior. Factor copulas reduce parameter count in high dimension; vine or
+graphical updates refine dependence on small samples; consistency testing checks
+whether the update departs from the prior.
 
 ## Setup
 
 ```{r libs}
 library(copulaNetworks)
 ```
+
+Heatmaps and network plots use the exported `Plot*` helpers (`pheatmap` and
+`ggraph`).
 
 Optional dependencies (install as needed):
 
@@ -108,13 +113,38 @@ CheckFactorStructure(prior_fit$impliedCor, nFactors = 1L)
 prior_fit$loadings
 ```
 
-Implied correlation heatmap:
+Factor-loading groups color nodes in the network plots below:
 
-```{r phase1-heatmap, eval=has_factor, fig.cap="Prior implied correlation"}
+```{r phase1-node-groups, eval=has_factor}
+factor_groups <- FactorGroupsFromLoadings(prior_fit$loadings, k = 2)
+node_groups <- setNames(paste0("Group", factor_groups), names(factor_groups))
+factor_groups
+```
+
+The Phase 1 factor model implies a **dense** correlation structure (every pair
+linked through the latent factor). Implied correlation heatmap:
+
+```{r phase1-heatmap, eval=has_factor, fig.cap="Phase 1 factor-implied correlation"}
 if (has_factor) {
-  PlotCopulaCorHeatmap(
-    list(copulaCor = prior_fit$impliedCor, keptCols = nodes),
-    title = "Phase 1 implied correlation"
+  grid::grid.draw(
+    PlotCopulaCorHeatmap(
+      list(copulaCor = prior_fit$impliedCor, keptCols = nodes),
+      title = "Phase 1 implied correlation"
+    )
+  )
+}
+```
+
+Prior implied network (pseudo-graphical fit from implied correlation):
+
+```{r phase1-network, eval=has_factor, fig.cap="Phase 1 factor-implied network"}
+if (has_factor) {
+  prior_pseudo <- PseudoGraphicalFitFromCor(prior_fit$impliedCor, nObs = prior_fit$n)
+  PlotCopulaNetwork(
+    prior_pseudo,
+    title = "Phase 1 prior (implied)",
+    nodeGroups = node_groups,
+    printPlot = FALSE
   )
 }
 ```
@@ -131,7 +161,6 @@ update_fit_both <- FitCopulaUpdate(
 if (!is.null(update_fit_both$vine)) {
   update_fit_both$vine$logLik
 }
-FactorGroupsFromLoadings(prior_fit$loadings, k = 2)
 ```
 
 ## Phase 2(b): Graphical update
@@ -146,11 +175,43 @@ update_fit <- FitCopulaUpdate(
 update_fit$graphical$lambdaOpt
 ```
 
-Network plot:
+On the small update sample, glasso yields a **sparse** graphical model. Copula
+correlation heatmap:
 
-```{r network-plot, eval=has_factor, fig.cap="Update graphical network"}
+```{r phase2-cor-heatmap, eval=has_factor, fig.cap="Phase 2 update copula correlation"}
 if (has_factor && !is.null(update_fit$graphical)) {
-  PlotCopulaNetwork(update_fit$graphical, title = "update")
+  grid::grid.draw(
+    PlotCopulaCorHeatmap(
+      update_fit$graphical,
+      title = "Phase 2 update copula correlation"
+    )
+  )
+}
+```
+
+Partial correlation heatmap (glasso estimate):
+
+```{r phase2-pcor-heatmap, eval=has_factor, fig.cap="Phase 2 update partial correlation"}
+if (has_factor && !is.null(update_fit$graphical)) {
+  grid::grid.draw(
+    PlotPcorHeatmap(
+      update_fit$graphical,
+      title = "Phase 2 update partial correlation"
+    )
+  )
+}
+```
+
+Sparse update network:
+
+```{r network-plot, eval=has_factor, fig.cap="Phase 2 update graphical network"}
+if (has_factor && !is.null(update_fit$graphical)) {
+  PlotCopulaNetwork(
+    update_fit$graphical,
+    title = "Phase 2 update",
+    nodeGroups = node_groups,
+    printPlot = FALSE
+  )
 }
 ```
 
@@ -159,6 +220,31 @@ if (has_factor && !is.null(update_fit$graphical)) {
 ```{r comparison, eval=has_factor}
 cmp <- ComparePriorToUpdate(prior_fit, update_fit)
 head(cmp$pcor)
+cmp_plots <- PlotStratumComparison(cmp)
+```
+
+Partial-correlation scatter (prior implied vs update glasso):
+
+```{r comparison-pcor-scatter, eval=has_factor, fig.cap="Partial correlation: prior vs update", fig.width=8, fig.height=6}
+if (has_factor) {
+  cmp_plots$plots$pcor$scatter
+}
+```
+
+Largest differential partial-correlation pairs:
+
+```{r comparison-pcor-bar, eval=has_factor, fig.cap="Differential partial correlation pairs", fig.width=8, fig.height=6}
+if (has_factor && !is.null(cmp_plots$plots$pcor$bar)) {
+  cmp_plots$plots$pcor$bar
+}
+```
+
+Copula-correlation scatter (prior implied vs update empirical):
+
+```{r comparison-cor-scatter, eval=has_factor, fig.cap="Copula correlation: prior vs update", fig.width=8, fig.height=6}
+if (has_factor) {
+  cmp_plots$plots$copulaCor$scatter
+}
 ```
 
 ## Frequentist consistency test

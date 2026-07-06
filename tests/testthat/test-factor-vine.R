@@ -85,6 +85,19 @@ test_that("TestPriorConsistency returns pValue in [0,1]", {
 })
 
 # --- Comparison ---
+test_that("PseudoGraphicalFitFromCor has structure for plotting", {
+  nodes <- paste0("node", 1:6)
+  lambda <- sin(pi * rep(0.5, 6) / 2)
+  cor_mat <- outer(lambda, lambda)
+  diag(cor_mat) <- 1
+  colnames(cor_mat) <- rownames(cor_mat) <- nodes
+  pseudo <- PseudoGraphicalFitFromCor(cor_mat, nObs = 100L)
+  expect_equal(pseudo$keptCols, nodes)
+  expect_equal(dim(pseudo$pcor), c(6, 6))
+  expect_equal(dim(pseudo$adjacency), c(6, 6))
+  expect_true(all(diag(pseudo$adjacency) == 0))
+})
+
 test_that("ComparePriorToUpdate structure matches CompareTwoStrata", {
   blocks <- make_factor_data(N = 80, n = 40, d = 6)
   nodes <- paste0("node", 1:6)
