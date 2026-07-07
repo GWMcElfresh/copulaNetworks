@@ -18,6 +18,7 @@ knitr::opts_chunk$set(
   fig.align = "center"
 )
 
+# pheatmap grobs must be drawn explicitly for knitr figure capture
 draw_pheatmap <- function(grob) {
   grid::grid.newpage()
   grid::grid.draw(if (!is.null(grob$gtable)) grob$gtable else grob)
@@ -42,14 +43,20 @@ package on Gaussian copula normal scores.
 library(copulaNetworks)
 ```
 
-```{r check-deps}
-has_powerprior <- requireNamespace("powerprior", quietly = TRUE)
-```
+Heatmaps and network plots use the exported `Plot*` helpers (`pheatmap` and
+`ggraph`). This vignette requires **powerprior** (installed for pkgdown builds
+via `Config/Needs/website`).
 
 | Package | Role |
 |---------|------|
 | powerprior | Multivariate NIW power prior and posterior |
 | huge | Phase 2 graphical lasso (imported) |
+
+```{r check-deps}
+if (!requireNamespace("powerprior", quietly = TRUE)) {
+  stop("Vignette requires the powerprior package.", call. = FALSE)
+}
+```
 
 ## Synthetic historical cohorts
 
@@ -83,7 +90,7 @@ lapply(historicalCohorts, nrow)
 
 ## Per-cohort correlation heatmaps
 
-```{r cohort-heatmaps, eval=has_powerprior, fig.cap="Per-cohort copula correlation (empirical on normal scores)"}
+```{r cohort-heatmaps, fig.cap="Per-cohort copula correlation (empirical on normal scores)"}
 for (cohort_name in names(historicalCohorts)) {
   cohort_df <- historicalCohorts[[cohort_name]]
   z_cohort <- qnorm(UniformMarginalTransform(as.matrix(cohort_df)))
@@ -99,7 +106,7 @@ for (cohort_name in names(historicalCohorts)) {
 
 ## Phase 1: Meta-analytic power prior
 
-```{r phase1, eval=has_powerprior}
+```{r phase1}
 meta_prior <- FitMetaCorPrior(
   historicalCohorts,
   nodeCols = nodes,
@@ -111,7 +118,7 @@ meta_prior$nHistorical
 
 Meta-analytic implied correlation:
 
-```{r phase1-heatmap, eval=has_powerprior, fig.cap="Phase 1 meta-analytic implied correlation"}
+```{r phase1-heatmap, fig.cap="Phase 1 meta-analytic implied correlation"}
 draw_pheatmap(
   PlotCopulaCorHeatmap(
     list(copulaCor = meta_prior$impliedCor, keptCols = nodes),
@@ -122,7 +129,7 @@ draw_pheatmap(
 
 Prior network (dense pseudo-graphical fit from implied correlation):
 
-```{r phase1-network, eval=has_powerprior, fig.cap="Meta-analytic prior network"}
+```{r phase1-network, fig.cap="Meta-analytic prior network"}
 prior_pseudo <- PseudoGraphicalFitFromCor(meta_prior$impliedCor, nObs = meta_prior$n)
 print(PlotCopulaNetwork(
   prior_pseudo,
@@ -135,7 +142,7 @@ print(PlotCopulaNetwork(
 
 Update data use **pooled historical** marginal transforms:
 
-```{r phase2, eval=has_powerprior}
+```{r phase2}
 update_fit <- FitCopulaUpdate(
   updateData,
   priorFit = meta_prior,
@@ -145,7 +152,7 @@ update_fit <- FitCopulaUpdate(
 update_fit$graphical$lambdaOpt
 ```
 
-```{r phase2-cor-heatmap, eval=has_powerprior, fig.cap="Phase 2 update copula correlation"}
+```{r phase2-cor-heatmap, fig.cap="Phase 2 update copula correlation"}
 draw_pheatmap(
   PlotCopulaCorHeatmap(
     update_fit$graphical,
@@ -154,7 +161,7 @@ draw_pheatmap(
 )
 ```
 
-```{r phase2-pcor-heatmap, eval=has_powerprior, fig.cap="Phase 2 update partial correlation"}
+```{r phase2-pcor-heatmap, fig.cap="Phase 2 update partial correlation"}
 draw_pheatmap(
   PlotPcorHeatmap(
     update_fit$graphical,
@@ -163,7 +170,7 @@ draw_pheatmap(
 )
 ```
 
-```{r phase2-network, eval=has_powerprior, fig.cap="Phase 2 update graphical network"}
+```{r phase2-network, fig.cap="Phase 2 update graphical network"}
 print(PlotCopulaNetwork(
   update_fit$graphical,
   title = "Phase 2 update",
@@ -173,29 +180,29 @@ print(PlotCopulaNetwork(
 
 ## Prior vs update comparison
 
-```{r comparison, eval=has_powerprior}
+```{r comparison}
 cmp <- ComparePriorToUpdate(meta_prior, update_fit)
 cmp_plots <- PlotStratumComparison(cmp)
 ```
 
-```{r comparison-pcor-scatter, eval=has_powerprior, fig.cap="Partial correlation: meta prior vs update", fig.width=8, fig.height=6}
+```{r comparison-pcor-scatter, fig.cap="Partial correlation: meta prior vs update", fig.width=8, fig.height=6}
 print(cmp_plots$plots$pcor$scatter)
 ```
 
-```{r comparison-cor-scatter, eval=has_powerprior, fig.cap="Copula correlation: meta prior vs update", fig.width=8, fig.height=6}
+```{r comparison-cor-scatter, fig.cap="Copula correlation: meta prior vs update", fig.width=8, fig.height=6}
 print(cmp_plots$plots$copulaCor$scatter)
 ```
 
 ## Bayesian conjugate update
 
-```{r bayes, eval=has_powerprior}
+```{r bayes}
 bayes_fit <- FitBayesianMetaUpdate(meta_prior, updateData)
 head(bayes_fit$impliedCor[, 1:4])
 ```
 
 Posterior correlation heatmap:
 
-```{r bayes-heatmap, eval=has_powerprior, fig.cap="Posterior correlation after powerprior update"}
+```{r bayes-heatmap, fig.cap="Posterior correlation after powerprior update"}
 draw_pheatmap(
   PlotCopulaCorHeatmap(
     list(copulaCor = bayes_fit$impliedCor, keptCols = nodes),
@@ -208,7 +215,7 @@ draw_pheatmap(
 
 Global discount grid (same `a0` recycled across cohorts):
 
-```{r sensitivity, eval=has_powerprior}
+```{r sensitivity}
 sens <- RunDiscountSensitivity(
   meta_prior,
   updateData,
@@ -219,7 +226,7 @@ sens$summary
 
 Univariate diagnostic via **powerprior** (first node mean on pooled historical Z):
 
-```{r sensitivity-plot, eval=has_powerprior, fig.cap="Discount sensitivity (powerprior)"}
+```{r sensitivity-plot, fig.cap="Discount sensitivity (powerprior)"}
 z_pooled <- do.call(rbind, meta_prior$zCohortList)
 z_update <- bayes_fit$zMatrix
 cmp_disc <- powerprior::compare_discounting(
@@ -235,7 +242,7 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
 
 Posterior correlation at selected discount values:
 
-```{r sensitivity-cor-heatmaps, eval=has_powerprior, fig.cap="Posterior correlation vs global a0"}
+```{r sensitivity-cor-heatmaps, fig.cap="Posterior correlation vs global a0"}
 for (a0_key in c("0", "0.5", "1")) {
   draw_pheatmap(
     PlotCopulaCorHeatmap(
@@ -248,7 +255,7 @@ for (a0_key in c("0", "0.5", "1")) {
 
 Compatibility of each historical cohort with the update sample:
 
-```{r compatibility, eval=has_powerprior}
+```{r compatibility}
 compat <- lapply(names(meta_prior$zCohortList), function(nm) {
   powerprior::check_compatibility(meta_prior$zCohortList[[nm]], bayes_fit$zMatrix)
 })
@@ -258,7 +265,7 @@ compat
 
 ## End-to-end pipeline
 
-```{r pipeline, eval=has_powerprior}
+```{r pipeline}
 res <- RunMetaAnalysisPipeline(
   historicalCohorts = historicalCohorts,
   updateData = updateData,

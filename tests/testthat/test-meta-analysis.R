@@ -114,3 +114,29 @@ test_that("FitCopulaUpdate works with meta prior without loadings", {
   expect_false(is.null(update_fit$graphical))
   expect_null(update_fit$vine)
 })
+
+test_that("meta-analysis vignette HTML includes embedded figures", {
+  v_path <- system.file("doc", "meta-analysis-power-prior.html", package = "copulaNetworks")
+  if (!nzchar(v_path)) {
+    pkg_root <- normalizePath(file.path(testthat::test_path(), "..", ".."), winslash = "/")
+    candidates <- c(
+      file.path(pkg_root, "inst", "doc", "meta-analysis-power-prior.html"),
+      file.path(pkg_root, "vignettes", "meta-analysis-power-prior.html")
+    )
+    v_path <- candidates[file.exists(candidates)][1]
+  }
+  skip_if_not(
+    length(v_path) == 1 && nzchar(v_path) && file.exists(v_path),
+    "Vignette HTML not built (run tools::buildVignettes() or R CMD build)"
+  )
+  v <- readLines(v_path)
+  expect_true(any(grepl("RunMetaAnalysisPipeline", v)))
+  expect_true(
+    any(grepl("<img", v)),
+    info = "Vignette HTML has no embedded figures"
+  )
+  expect_true(
+    any(grepl("Meta-analytic prior network", v)),
+    info = "Prior network figure missing from vignette"
+  )
+})
