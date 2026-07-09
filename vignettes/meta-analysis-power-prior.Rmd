@@ -44,18 +44,15 @@ library(copulaNetworks)
 ```
 
 Heatmaps and network plots use the exported `Plot*` helpers (`pheatmap` and
-`ggraph`). This vignette requires **powerprior** (installed for pkgdown builds
-via `Config/Needs/website`).
+`ggraph`).
 
 | Package | Role |
 |---------|------|
-| powerprior | Multivariate NIW power prior and posterior |
-| huge | Phase 2 graphical lasso (imported) |
+| powerprior | Multivariate NIW power prior and posterior (Imports) |
+| huge | Phase 2 graphical lasso (Imports) |
 
-```{r check-deps}
-if (!requireNamespace("powerprior", quietly = TRUE)) {
-  stop("Vignette requires the powerprior package.", call. = FALSE)
-}
+```{r check-deps, include=FALSE}
+# powerprior is an Imports dependency of copulaNetworks
 ```
 
 ## Synthetic historical cohorts

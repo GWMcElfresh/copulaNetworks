@@ -19,6 +19,5 @@ List with \code{impliedCor}, \code{marginalSpec}, \code{nodeCols}, \code{powerPr
 }
 \description{
 Pools large historical cohorts via sequential multivariate Normal-Inverse-Wishart
-power priors (\code{\link[powerprior:powerprior_multivariate]{powerprior::powerprior_multivariate()}}). Requires optional
-\strong{powerprior} package.
+power priors (\code{\link[powerprior:powerprior_multivariate]{powerprior::powerprior_multivariate()}}).
 }

@@ -32,7 +32,6 @@ make_meta_cohorts <- function(d = 6L,
 }
 
 test_that("FitMetaCorPrior returns expected structure", {
-  skip_if_not_installed("powerprior")
   blocks <- make_meta_cohorts(d = 6)
   nodes <- paste0("node", 1:6)
   fit <- FitMetaCorPrior(blocks$historicalCohorts, nodeCols = nodes, a0 = c(0.5, 0.5))
@@ -44,7 +43,6 @@ test_that("FitMetaCorPrior returns expected structure", {
 })
 
 test_that("FitBayesianMetaUpdate returns posterior correlation", {
-  skip_if_not_installed("powerprior")
   blocks <- make_meta_cohorts(d = 6)
   nodes <- paste0("node", 1:6)
   meta_prior <- FitMetaCorPrior(blocks$historicalCohorts, nodeCols = nodes)
@@ -54,7 +52,6 @@ test_that("FitBayesianMetaUpdate returns posterior correlation", {
 })
 
 test_that("RunDiscountSensitivity grid has expected dimensions", {
-  skip_if_not_installed("powerprior")
   blocks <- make_meta_cohorts(d = 6)
   nodes <- paste0("node", 1:6)
   meta_prior <- FitMetaCorPrior(blocks$historicalCohorts, nodeCols = nodes)
@@ -70,7 +67,6 @@ test_that("RunDiscountSensitivity grid has expected dimensions", {
 })
 
 test_that("RunDiscountSensitivity cor matrices are finite at a0 = 0", {
-  skip_if_not_installed("powerprior")
   blocks <- make_meta_cohorts(d = 6)
   nodes <- paste0("node", 1:6)
   meta_prior <- FitMetaCorPrior(blocks$historicalCohorts, nodeCols = nodes)
@@ -83,7 +79,6 @@ test_that("RunDiscountSensitivity cor matrices are finite at a0 = 0", {
 })
 
 test_that("RunMetaAnalysisPipeline runs end-to-end", {
-  skip_if_not_installed("powerprior")
   blocks <- make_meta_cohorts(d = 6)
   nodes <- paste0("node", 1:6)
   res <- RunMetaAnalysisPipeline(
@@ -101,7 +96,6 @@ test_that("RunMetaAnalysisPipeline runs end-to-end", {
 })
 
 test_that("FitCopulaUpdate works with meta prior without loadings", {
-  skip_if_not_installed("powerprior")
   blocks <- make_meta_cohorts(d = 6)
   nodes <- paste0("node", 1:6)
   meta_prior <- FitMetaCorPrior(blocks$historicalCohorts, nodeCols = nodes)

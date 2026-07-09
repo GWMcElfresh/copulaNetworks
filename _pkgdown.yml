@@ -16,3 +16,6 @@ articles:
   - title: Meta-Analysis Power Prior
     contents:
       - meta-analysis-power-prior
+  - title: Copula Mixed Models
+    contents:
+      - copula-mixed-models
