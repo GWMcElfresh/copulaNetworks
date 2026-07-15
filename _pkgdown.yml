@@ -10,6 +10,9 @@ navbar:
       icon: fab fa-github
       href: https://github.com/GWMcElfresh/copulaNetworks
 articles:
+  - title: Stratified Nonparanormal
+    contents:
+      - stratified-nonparanormal
   - title: Two-Phase Factor-Vine
     contents:
       - two-phase-factor-vine

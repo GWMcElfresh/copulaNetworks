@@ -58,14 +58,14 @@ a glasso fit on residuals succeeds.
 Random effects are introduced \strong{only} in the latent Gaussian layer after
 nonparanormal (or prior-ECDF) transformation of \code{nodeCols}. A shared
 RHS-only \code{latentFormula} specifies the mean structure applied to each node's
-latent scores \(z_j\):
+latent scores \eqn{z_j}:
 }
 \details{
 \deqn{z_j = X\beta_j + Z b_j + \varepsilon_j, \quad
 b_j \sim \mathrm{MVN}(0, D_j), \quad
 \varepsilon \sim \mathrm{MVN}(0, \Sigma)}
 
-Cross-node dependence is captured by residual \(\Sigma\). When \code{metaPrior}
+Cross-node dependence is captured by residual \eqn{\Sigma}. When \code{metaPrior}
 from \code{\link[=FitMetaCorPrior]{FitMetaCorPrior()}} is supplied, residual scores are passed to the
 existing NIW / powerprior update (\code{\link[=FitBayesianMetaUpdate]{FitBayesianMetaUpdate()}}) without changing
 the conjugate NIW machinery.

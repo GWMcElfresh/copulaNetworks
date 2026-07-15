@@ -11,5 +11,10 @@ Fit and visualize stratified nonparanormal Gaussian copula graphical models usin
 \author{
 \strong{Maintainer}: GW McElfresh \email{mcelfreshgw@gmail.com}
 
+Authors:
+\itemize{
+  \item GW McElfresh \email{mcelfreshgw@gmail.com}
+}
+
 }
 \keyword{internal}

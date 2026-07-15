@@ -11,6 +11,7 @@ Stratified and two-phase copula network modeling for high-dimensional dependence
 
 ## Documentation
 
+- [Stratified Nonparanormal Vignette](https://GWMcElfresh.github.io/copulaNetworks/articles/stratified-nonparanormal.html)
 - [Two-Phase Factor-Vine Vignette](https://GWMcElfresh.github.io/copulaNetworks/articles/two-phase-factor-vine.html)
 - [Meta-Analysis Power Prior Vignette](https://GWMcElfresh.github.io/copulaNetworks/articles/meta-analysis-power-prior.html)
 - [Copula Mixed Models Vignette](https://GWMcElfresh.github.io/copulaNetworks/articles/copula-mixed-models.html)

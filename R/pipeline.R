@@ -108,7 +108,9 @@ RunCopulaPipeline <- function(data,
         labelA = nm_a,
         labelB = nm_b
       )
-      pair_dir <- file.path(cmp_dir, paste(nm_a, "vs", nm_b, sep = "_"))
+      # Stratum keys use "::"; sanitize for Windows paths (same rule as PlotAllStrata)
+      pair_label <- paste(nm_a, "vs", nm_b, sep = "_")
+      pair_dir <- file.path(cmp_dir, gsub("[^A-Za-z0-9._-]+", "_", pair_label))
       PlotStratumComparison(
         cmp,
         outDir = pair_dir,
@@ -116,7 +118,7 @@ RunCopulaPipeline <- function(data,
         height = comparisonHeight,
         dpi = comparisonDpi
       )
-      comparisons[[paste(nm_a, "vs", nm_b, sep = "_")]] <- cmp
+      comparisons[[pair_label]] <- cmp
     }
     if (length(comparisons) > 0 && !is.null(outDir)) {
       SaveCheckpoint(comparisons, outDir, filename = "comparisons.rds")

@@ -1,0 +1,256 @@
+---
+title: "Stratified Nonparanormal Copula Networks"
+author: "GW McElfresh"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Stratified Nonparanormal Copula Networks}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5,
+  fig.align = "center"
+)
+
+# pheatmap grobs must be drawn explicitly for knitr figure capture
+draw_pheatmap <- function(grob) {
+  grid::grid.newpage()
+  grid::grid.draw(if (!is.null(grob$gtable)) grob$gtable else grob)
+  invisible(NULL)
+}
+```
+
+## Motivation
+
+Understanding dependence among continuous biomarkers or imaging features is
+central to network-style analyses, but the variables rarely share a common
+scale or a Gaussian margin. Pearson correlation on the raw measurements
+therefore confounds marginal shape with association. The nonparanormal
+(Gaussian copula) model maps each margin to a latent normal score
+\(z_j = \Phi^{-1}(\hat{F}_j(y_j))\) and then estimates dependence among the
+\(z_j\). Graphical lasso on those scores targets a sparse precision graph in
+the copula space rather than in the original units.
+
+This vignette is the base workflow for **copulaNetworks**: transform, fit a
+glasso network (StARS or eBIC), and visualize correlations and edges. Later
+articles extend the same normal-score layer with factor priors, meta-analytic
+power priors, and latent random effects.
+
+## Setup
+
+```{r libs}
+library(copulaNetworks)
+```
+
+Heatmaps and network plots use the exported `Plot*` helpers (`pheatmap` and
+`ggraph`). We keep `nlambda` modest so the vignette builds quickly; production
+fits often use a denser path (e.g. `nlambda = 40`).
+
+## Single-stratum warm-up
+
+Simulate a continuous block with one shared latent factor and idiosyncratic
+noise. Loadings in \([0.35, 0.75]\) keep residual variance identifiable while
+inducing a dense correlation skeleton for glasso to sparsify.
+
+```{r synthetic-single}
+set.seed(42)
+d <- 8
+n_obs <- 120
+lambda <- runif(d, 0.35, 0.75)
+f <- rnorm(n_obs)
+eps <- matrix(rnorm(n_obs * d), nrow = n_obs, ncol = d)
+factor_part <- matrix(lambda, nrow = n_obs, ncol = d, byrow = TRUE) * f
+x <- factor_part + sweep(eps, 2, sqrt(1 - lambda^2), `*`)
+colnames(x) <- paste0("node", seq_len(d))
+dat <- as.data.frame(x)
+nodes <- colnames(dat)
+dim(dat)
+```
+
+Fit one nonparanormal graphical model. StARS selects \(\lambda\) by edge
+stability rather than by information criteria alone, which is useful when
+\(n\) is moderate relative to \(p\).
+
+```{r fit-single}
+fit_full <- FitStratumCopula(
+  dat,
+  nodeCols = nodes,
+  method = "stars",
+  nlambda = 20,
+  starsThresh = 0.1
+)
+fit_full$n
+fit_full$lambdaOpt
+```
+
+Copula correlation (empirical on normal scores):
+
+```{r single-cor, fig.cap="Single-stratum copula correlation"}
+draw_pheatmap(
+  PlotCopulaCorHeatmap(fit_full, title = "Copula correlation (full sample)")
+)
+```
+
+Partial correlation after glasso:
+
+```{r single-pcor, fig.cap="Single-stratum partial correlation"}
+draw_pheatmap(
+  PlotPcorHeatmap(fit_full, title = "Partial correlation (glasso)")
+)
+```
+
+Selected network:
+
+```{r single-network, fig.cap="Single-stratum copula network"}
+print(PlotCopulaNetwork(fit_full, title = "Nonparanormal network (full sample)"))
+```
+
+## Stratified path
+
+Dependence often differs by cohort, tissue, or timepoint. Here we add a binary
+group with a mild loading shift so stratum B is slightly more factor-driven than
+stratum A. The prepare step only builds named subsets; it does not impute or
+transform margins.
+
+```{r synthetic-strata}
+set.seed(42)
+n_per <- 80
+sim_group <- function(n_obs, lambda_shift = 0) {
+  lam <- pmax(0.2, pmin(0.85, lambda + lambda_shift))
+  f <- rnorm(n_obs)
+  eps <- matrix(rnorm(n_obs * d), nrow = n_obs, ncol = d)
+  factor_part <- matrix(lam, nrow = n_obs, ncol = d, byrow = TRUE) * f
+  x <- factor_part + sweep(eps, 2, sqrt(1 - lam^2), `*`)
+  colnames(x) <- nodes
+  as.data.frame(x)
+}
+dat_strata <- rbind(
+  cbind(group = "A", sim_group(n_per, lambda_shift = -0.05)),
+  cbind(group = "B", sim_group(n_per, lambda_shift = 0.08))
+)
+dat_strata$group <- as.character(dat_strata$group)
+table(dat_strata$group)
+```
+
+```{r prepare}
+prep <- PrepareCopulaData(
+  data = dat_strata,
+  strataCols = "group",
+  nodeCols = nodes,
+  strataSpecs = list(
+    group = list(
+      group_by = "group",
+      minN = 30
+    )
+  )
+)
+prep$meta
+names(prep$strata)
+```
+
+```{r fit-strata}
+fits <- FitCopulaStrata(
+  prep,
+  method = "stars",
+  nlambda = 20,
+  starsThresh = 0.1,
+  minN = 30,
+  includeFull = FALSE
+)
+names(fits$fits)
+```
+
+Per-stratum correlation heatmaps:
+
+```{r strata-heatmaps, fig.cap="Per-stratum copula correlation"}
+for (nm in names(fits$fits)) {
+  draw_pheatmap(
+    PlotCopulaCorHeatmap(
+      fits$fits[[nm]],
+      title = paste("Copula correlation:", nm)
+    )
+  )
+}
+```
+
+Per-stratum networks:
+
+```{r strata-networks, fig.cap="Per-stratum copula networks"}
+for (nm in names(fits$fits)) {
+  print(PlotCopulaNetwork(
+    fits$fits[[nm]],
+    title = paste("Network:", nm)
+  ))
+}
+```
+
+When both strata fit, pairwise comparison separates shared edges from
+stratum-specific structure:
+
+```{r compare}
+nm_a <- "group::A"
+nm_b <- "group::B"
+cmp <- CompareTwoStrata(
+  fits$fits[[nm_a]],
+  fits$fits[[nm_b]],
+  labelA = "A",
+  labelB = "B",
+  matrices = c("pcor", "copulaCor")
+)
+cmp_plots <- PlotStratumComparison(cmp)
+```
+
+```{r compare-pcor, fig.cap="Partial correlation: stratum A vs B", fig.width=8, fig.height=6}
+print(cmp_plots$plots$pcor$scatter)
+```
+
+## One-call pipeline
+
+`RunCopulaPipeline()` chains prepare, fit, optional diagnostics, and
+comparisons, writing RDS checkpoints when `outDir` is set. The call below
+reuses the same synthetic strata and writes to a temporary directory.
+
+```{r pipeline}
+out_dir <- file.path(tempdir(), "copula_strata_vignette")
+pipeline_res <- RunCopulaPipeline(
+  data = dat_strata,
+  strataCols = "group",
+  nodeCols = nodes,
+  strataSpecs = list(
+    group = list(group_by = "group", minN = 30)
+  ),
+  comparePairs = list(c("group::A", "group::B")),
+  outDir = out_dir,
+  method = "stars",
+  nlambda = 20,
+  minN = 30,
+  plotDiagnostics = TRUE
+)
+names(pipeline_res$fitResults$fits)
+length(pipeline_res$comparisons)
+```
+
+## Where next
+
+The stratified nonparanormal fit is the package baseline: normal scores, glasso,
+and stratum comparison. Three extensions build on the same latent Gaussian
+layer:
+
+- **Two-phase factor-vine** — large-sample factor prior, then small-sample
+  graphical or vine update.
+- **Meta-analysis power prior** — pool several historical cohorts with cohort-
+  specific discounting before a small-sample update.
+- **Latent mixed models** — place random effects in the latent scores so
+  longitudinal or clustered structure does not inflate residual dependence.
+
+## Session info
+
+```{r session}
+sessionInfo()
+```

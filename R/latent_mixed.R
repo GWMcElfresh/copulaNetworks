@@ -64,13 +64,13 @@ assemble_latent_mixed_summaries <- function(node_fits, design) {
 #' Random effects are introduced **only** in the latent Gaussian layer after
 #' nonparanormal (or prior-ECDF) transformation of `nodeCols`. A shared
 #' RHS-only `latentFormula` specifies the mean structure applied to each node's
-#' latent scores \(z_j\):
+#' latent scores \eqn{z_j}:
 #'
 #' \deqn{z_j = X\beta_j + Z b_j + \varepsilon_j, \quad
 #' b_j \sim \mathrm{MVN}(0, D_j), \quad
 #' \varepsilon \sim \mathrm{MVN}(0, \Sigma)}
 #'
-#' Cross-node dependence is captured by residual \(\Sigma\). When `metaPrior`
+#' Cross-node dependence is captured by residual \eqn{\Sigma}. When `metaPrior`
 #' from [FitMetaCorPrior()] is supplied, residual scores are passed to the
 #' existing NIW / powerprior update ([FitBayesianMetaUpdate()]) without changing
 #' the conjugate NIW machinery.
@@ -239,8 +239,8 @@ FitCopulaLatentMixedModel <- function(data,
 #' @param fit Output of [FitCopulaLatentMixedModel()].
 #' @param newdata Data frame with covariates / grouping variable (and node
 #'   columns when `type = "residual"`).
-#' @param type `"latentMean"` for \(X\beta_j + Z b_j\); `"residual"` for
-#'   \(z_j - \) latent mean when node columns are present.
+#' @param type `"latentMean"` for \eqn{X\beta_j + Z b_j}; `"residual"` for
+#'   \eqn{z_j} minus latent mean when node columns are present.
 #' @return Matrix (n x p) of predictions named by `fit$nodeCols`.
 #' @export
 PredictCopulaLatentMixedModel <- function(fit,

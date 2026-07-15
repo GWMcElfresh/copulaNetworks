@@ -226,11 +226,13 @@ Univariate diagnostic via **powerprior** (first node mean on pooled historical Z
 ```{r sensitivity-plot, fig.cap="Discount sensitivity (powerprior)"}
 z_pooled <- do.call(rbind, meta_prior$zCohortList)
 z_update <- bayes_fit$zMatrix
+# Univariate on the first node mean: multivariate NIW sampling can fail when
+# powerprior hands LaplacesDemon a numerically non-symmetric scale matrix.
 cmp_disc <- powerprior::compare_discounting(
   z_pooled,
   z_update,
   a0_values = c(0, 0.25, 0.5, 0.75, 1),
-  multivariate = TRUE
+  multivariate = FALSE
 )
 if (requireNamespace("ggplot2", quietly = TRUE)) {
   print(powerprior::plot_sensitivity(cmp_disc, parameter = "mu", dimension = 1))

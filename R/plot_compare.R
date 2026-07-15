@@ -157,7 +157,8 @@ comparison_bar_plot <- function(comparison_df, labelA, labelB, title, delta_thre
       values_to = "value"
     ) %>%
     dplyr::mutate(
-      stratum = dplyr::recode(stratum, valueA = labelA, valueB = labelB),
+      # !! injects function args; bare labelA/labelB collide with comparison_df columns
+      stratum = dplyr::recode(stratum, valueA = !!labelA, valueB = !!labelB),
       edge = reorder(edge, absDelta)
     )
 

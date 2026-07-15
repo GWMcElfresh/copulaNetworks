@@ -12,8 +12,8 @@ PredictCopulaLatentMixedModel(fit, newdata, type = c("latentMean", "residual"))
 \item{newdata}{Data frame with covariates / grouping variable (and node
 columns when \code{type = "residual"}).}
 
-\item{type}{\code{"latentMean"} for \(X\beta_j + Z b_j\); \code{"residual"} for
-\(z_j - \) latent mean when node columns are present.}
+\item{type}{\code{"latentMean"} for \eqn{X\beta_j + Z b_j}; \code{"residual"} for
+\eqn{z_j} minus latent mean when node columns are present.}
 }
 \value{
 Matrix (n x p) of predictions named by \code{fit$nodeCols}.
