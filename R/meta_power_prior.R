@@ -77,8 +77,7 @@
 #' Fit a meta-analytic correlation prior from multiple historical cohorts
 #'
 #' Pools large historical cohorts via sequential multivariate Normal-Inverse-Wishart
-#' power priors ([powerprior::powerprior_multivariate()]). Requires optional
-#' **powerprior** package.
+#' power priors ([powerprior::powerprior_multivariate()]).
 #'
 #' @param historicalCohorts Named list of data frames, each with `nodeCols`.
 #' @param nodeCols Character vector of variable names shared across cohorts.

@@ -10,9 +10,15 @@ navbar:
       icon: fab fa-github
       href: https://github.com/GWMcElfresh/copulaNetworks
 articles:
+  - title: Stratified Nonparanormal
+    contents:
+      - stratified-nonparanormal
   - title: Two-Phase Factor-Vine
     contents:
       - two-phase-factor-vine
   - title: Meta-Analysis Power Prior
     contents:
       - meta-analysis-power-prior
+  - title: Copula Mixed Models
+    contents:
+      - copula-mixed-models

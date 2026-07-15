@@ -157,7 +157,8 @@ comparison_bar_plot <- function(comparison_df, labelA, labelB, title, delta_thre
       values_to = "value"
     ) %>%
     dplyr::mutate(
-      stratum = dplyr::recode(stratum, valueA = labelA, valueB = labelB),
+      # !! injects function args; bare labelA/labelB collide with comparison_df columns
+      stratum = dplyr::recode(stratum, valueA = !!labelA, valueB = !!labelB),
       edge = reorder(edge, absDelta)
     )
 
@@ -234,8 +235,10 @@ PlotStratumComparison <- function(cmp,
       comparison_df,
       labelA = label_a,
       labelB = label_b,
-      title = paste("Differential Pairs (|", "\u0394", "| > ", deltaThreshold, "): ",
-                    label_a, " vs. ", label_b, sep = ""),
+      title = paste0(
+        "Differential Pairs (|delta| > ", deltaThreshold, "): ",
+        label_a, " vs. ", label_b
+      ),
       delta_threshold = deltaThreshold
     )
 

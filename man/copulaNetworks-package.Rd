@@ -6,7 +6,7 @@
 \alias{copulaNetworks-package}
 \title{copulaNetworks: Stratified Nonparanormal Copula Networks}
 \description{
-Fit and visualize stratified nonparanormal Gaussian copula graphical models using graphical lasso (glasso) with StARS model selection. Supports declarative stratification, single-stratum diagnostics, and cross-stratum structure comparison. v0.4.0 adds Bayesian meta-analysis of multiple historical cohorts via multivariate power priors (powerprior package) with small-sample graphical update. v0.3.0 adds a two-phase factor-vine workflow (large-sample factor copula prior plus small-sample graphical or vine update) with simulation and optional Bayesian consistency testing.
+Fit and visualize stratified nonparanormal Gaussian copula graphical models using graphical lasso (glasso) with StARS model selection. Supports declarative stratification, single-stratum diagnostics, and cross-stratum structure comparison. v0.5.0 adds Bayesian copula latent mixed models (random effects in the latent Gaussian layer via latentFormula; brms HMC or conjugate Gibbs) with residual NIW covariance updates. v0.4.0 adds Bayesian meta-analysis of multiple historical cohorts via multivariate power priors (powerprior package) with small-sample graphical update. v0.3.0 adds a two-phase factor-vine workflow (large-sample factor copula prior plus small-sample graphical or vine update) with simulation and optional Bayesian consistency testing.
 }
 \author{
 \strong{Maintainer}: GW McElfresh \email{mcelfreshgw@gmail.com}

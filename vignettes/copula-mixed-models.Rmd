@@ -1,0 +1,283 @@
+---
+title: "Copula Mixed Models"
+author: "GW McElfresh"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Copula Mixed Models}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5,
+  fig.align = "center"
+)
+
+# pheatmap grobs must be drawn explicitly for knitr figure capture
+draw_pheatmap <- function(grob) {
+  grid::grid.newpage()
+  grid::grid.draw(if (!is.null(grob$gtable)) grob$gtable else grob)
+  invisible(NULL)
+}
+```
+
+## Motivation
+
+Gaussian copula / nonparanormal models map each margin to a latent Gaussian
+score \(z_j = \Phi^{-1}(F_j(y_j))\) and then model dependence among the \(z_j\).
+In longitudinal, repeated-measures, and clustered studies, observations within
+a subject (or cluster) share latent offsets that are **not** part of the
+cross-variable copula. Putting random effects in the **observed** margins
+conflates marginal location with dependence. This package places them only in
+the latent Gaussian layer:
+
+\[
+z_j = X\beta_j + Z b_j + \varepsilon_j, \qquad
+b_j \sim \mathrm{MVN}(0, D_j), \qquad
+\varepsilon \sim \mathrm{MVN}(0, \Sigma).
+\]
+
+Here `nodeCols` still defines which variables enter the copula. The shared
+RHS-only `latentFormula` (e.g. `~ time + (1 + time | subject)`) specifies the
+**latent mean structure** applied to each node's scores. Residual \(\Sigma\)
+is the copula covariance; when a meta-analytic NIW prior is available it is
+updated with the existing powerprior machinery unchanged.
+
+## Setup
+
+```{r libs}
+library(copulaNetworks)
+```
+
+This vignette uses `engine = "conjugate"` so it runs without Stan. We recommend
+`engine = "brms"` (Hamiltonian Monte Carlo) when **brms** is installed.
+
+Heatmaps and network plots use the same exported `Plot*` helpers as the
+factor-vine and meta-analysis vignettes (`pheatmap` and `ggraph`).
+
+## Simulated longitudinal data
+
+```{r simulate}
+set.seed(42)
+n_subj <- 30
+n_time <- 4
+d <- 6
+subject <- rep(seq_len(n_subj), each = n_time)
+time <- rep(seq_len(n_time), times = n_subj)
+n <- length(subject)
+b0 <- matrix(rnorm(n_subj * d, 0, 0.55), n_subj, d)
+b1 <- matrix(rnorm(n_subj * d, 0, 0.12), n_subj, d)
+f <- rnorm(n)
+lam <- runif(d, 0.35, 0.65)
+eps <- matrix(rnorm(n * d), n, d)
+X <- matrix(NA_real_, n, d)
+for (j in seq_len(d)) {
+  X[, j] <- b0[subject, j] + b1[subject, j] * time +
+    0.2 * time + lam[j] * f + eps[, j] * sqrt(1 - lam[j]^2)
+}
+colnames(X) <- paste0("node", seq_len(d))
+dat <- cbind(data.frame(subject = subject, time = time), as.data.frame(X))
+nodes <- paste0("node", seq_len(d))
+```
+
+## Latent mixed fit (random intercept + slope)
+
+```{r fit-mixed}
+fit_mixed <- suppressWarnings(FitCopulaLatentMixedModel(
+  dat,
+  nodeCols = nodes,
+  latentFormula = ~ time + (1 + time | subject),
+  engine = "conjugate",
+  nIter = 400,
+  burnIn = 100,
+  thin = 2,
+  seed = 42
+))
+fit_mixed$engine
+dim(fit_mixed$residualMatrix)
+head(fit_mixed$fixedEffects)
+```
+
+## Figures: raw NPN vs residual copula (same Plot* suite)
+
+Raw nonparanormal scores (no random-effect adjustment):
+
+```{r raw-cor-heatmap, fig.cap="Copula correlation on raw NPN scores (no RE adjustment)"}
+z_raw <- NonparanormalTransform(as.matrix(dat[, nodes]))
+raw_fit <- FitStratumCopula(
+  as.data.frame(z_raw),
+  nodeCols = nodes,
+  nlambda = 20,
+  method = "ebic",
+  preTransformed = TRUE
+)
+draw_pheatmap(
+  PlotCopulaCorHeatmap(raw_fit, title = "Raw NPN copula correlation")
+)
+```
+
+Residual correlation after latent mixed-model adjustment:
+
+```{r residual-cor-heatmap, fig.cap="Residual copula correlation after latent mixed model"}
+draw_pheatmap(
+  PlotLatentMixedResidualCorHeatmap(
+    fit_mixed,
+    title = "Residual copula correlation"
+  )
+)
+```
+
+```{r residual-pcor-heatmap, fig.cap="Residual partial correlation after latent mixed model"}
+draw_pheatmap(
+  PlotLatentMixedResidualPcorHeatmap(
+    fit_mixed,
+    title = "Residual partial correlation"
+  )
+)
+```
+
+```{r residual-network, fig.cap="Residual graphical network"}
+print(PlotLatentMixedResidualNetwork(
+  fit_mixed,
+  title = "Residual network",
+  printPlot = FALSE
+))
+```
+
+## Comparison: no-RE vs residual-copula structure
+
+```{r comparison}
+resid_graphical <- PseudoGraphicalFitFromLatentMixed(fit_mixed)
+cmp <- CompareTwoStrata(
+  raw_fit,
+  resid_graphical,
+  labelA = "rawNPN",
+  labelB = "residualMixed",
+  deltaThreshold = 0.05
+)
+cmp_plots <- PlotStratumComparison(cmp)
+```
+
+```{r comparison-pcor-scatter, fig.cap="Partial correlation: raw NPN vs residual mixed", fig.width=8, fig.height=6}
+print(cmp_plots$plots$pcor$scatter)
+```
+
+```{r comparison-cor-scatter, fig.cap="Copula correlation: raw NPN vs residual mixed", fig.width=8, fig.height=6}
+print(cmp_plots$plots$copulaCor$scatter)
+```
+
+## Repeated measures (random intercept only)
+
+```{r repeated}
+set.seed(7)
+n_clust <- 40
+n_rep <- 3
+clust <- rep(seq_len(n_clust), each = n_rep)
+n2 <- length(clust)
+b <- matrix(rnorm(n_clust * 5, 0, 0.7), n_clust, 5)
+f2 <- rnorm(n2)
+lam2 <- runif(5, 0.3, 0.55)
+Y <- matrix(NA_real_, n2, 5)
+for (j in 1:5) {
+  Y[, j] <- b[clust, j] + lam2[j] * f2 + rnorm(n2) * sqrt(1 - lam2[j]^2)
+}
+colnames(Y) <- paste0("m", 1:5)
+rep_dat <- cbind(data.frame(cluster = clust), as.data.frame(Y))
+rep_nodes <- paste0("m", 1:5)
+
+fit_rep <- suppressWarnings(FitCopulaLatentMixedModel(
+  rep_dat,
+  nodeCols = rep_nodes,
+  latentFormula = ~ 1 + (1 | cluster),
+  engine = "conjugate",
+  nIter = 300,
+  burnIn = 80,
+  seed = 7
+))
+```
+
+```{r repeated-cor-heatmap, fig.cap="Repeated-measures residual copula correlation"}
+draw_pheatmap(
+  PlotLatentMixedResidualCorHeatmap(
+    fit_rep,
+    title = "Repeated measures: residual correlation"
+  )
+)
+```
+
+```{r repeated-network, fig.cap="Repeated-measures residual network"}
+print(PlotLatentMixedResidualNetwork(
+  fit_rep,
+  title = "Repeated measures: residual network",
+  printPlot = FALSE
+))
+```
+
+## Interpreting fixed effects, random effects, and Sigma
+
+- **Fixed effects** (`fit$fixedEffects`): population-level associations on the
+  latent scale (e.g. time trend shared across subjects).
+- **Random effects** (`fit$randomEffects`, `fit$randomCov`): subject-specific
+  latent intercepts/slopes with node-specific \(D_j\).
+- **Residual \(\Sigma\)**: remaining cross-node dependence after removing
+  within-subject latent structure -- this is the copula network of interest.
+
+Prediction on the latent scale:
+
+```{r predict}
+pred <- PredictCopulaLatentMixedModel(fit_mixed, dat, type = "latentMean")
+dim(pred)
+```
+
+## Optional residual NIW update
+
+When historical cohorts define a [FitMetaCorPrior()] prior, residual scores
+feed the existing NIW posterior (unchanged conjugacy):
+
+```{r niw}
+hist <- list(
+  A = as.data.frame(matrix(rnorm(120 * d), 120, d, dimnames = list(NULL, nodes))),
+  B = as.data.frame(matrix(rnorm(100 * d), 100, d, dimnames = list(NULL, nodes)))
+)
+meta_prior <- FitMetaCorPrior(hist, nodeCols = nodes, a0 = 0.5)
+fit_niw <- suppressWarnings(FitCopulaLatentMixedModel(
+  dat,
+  nodeCols = nodes,
+  latentFormula = ~ time + (1 | subject),
+  engine = "conjugate",
+  metaPrior = meta_prior,
+  nIter = 200,
+  burnIn = 50,
+  seed = 1
+))
+draw_pheatmap(
+  PlotCopulaCorHeatmap(
+    list(copulaCor = fit_niw$impliedCor, keptCols = nodes),
+    title = "Posterior residual correlation (NIW)"
+  )
+)
+```
+
+## Relation to existing workflows
+
+| Workflow | Entry point | Role of random effects |
+|----------|-------------|------------------------|
+| Stratified glasso | `RunCopulaPipeline()` | None (NPN scores directly) |
+| Factor-vine | `RunFactorVinePipeline()` | None (factor prior + update) |
+| Meta power prior | `RunMetaAnalysisPipeline()` | None (NIW on scores) |
+| **Latent mixed** | `FitCopulaLatentMixedModel()` | RE in latent layer; NIW/glasso on residuals |
+
+Use the latent mixed model when clustering / longitudinal structure would
+otherwise inflate or distort the copula network. Users who omit
+`latentFormula` keep the existing no-RE workflows unchanged.
+
+## Session info
+
+```{r session}
+sessionInfo()
+```
