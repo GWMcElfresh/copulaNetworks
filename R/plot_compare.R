@@ -235,8 +235,10 @@ PlotStratumComparison <- function(cmp,
       comparison_df,
       labelA = label_a,
       labelB = label_b,
-      title = paste("Differential Pairs (|", "\u0394", "| > ", deltaThreshold, "): ",
-                    label_a, " vs. ", label_b, sep = ""),
+      title = paste0(
+        "Differential Pairs (|delta| > ", deltaThreshold, "): ",
+        label_a, " vs. ", label_b
+      ),
       delta_threshold = deltaThreshold
     )
 

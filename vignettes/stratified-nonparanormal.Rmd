@@ -213,8 +213,10 @@ print(cmp_plots$plots$pcor$scatter)
 ## One-call pipeline
 
 `RunCopulaPipeline()` chains prepare, fit, optional diagnostics, and
-comparisons, writing RDS checkpoints when `outDir` is set. The call below
-reuses the same synthetic strata and writes to a temporary directory.
+comparisons, writing RDS checkpoints when `outDir` is set. Diagnostics and
+pairwise plot exports are omitted here because those steps were already run
+above; production calls typically set `plotDiagnostics = TRUE` and pass
+`comparePairs`.
 
 ```{r pipeline}
 out_dir <- file.path(tempdir(), "copula_strata_vignette")
@@ -225,15 +227,13 @@ pipeline_res <- RunCopulaPipeline(
   strataSpecs = list(
     group = list(group_by = "group", minN = 30)
   ),
-  comparePairs = list(c("group::A", "group::B")),
   outDir = out_dir,
   method = "stars",
   nlambda = 20,
   minN = 30,
-  plotDiagnostics = TRUE
+  plotDiagnostics = FALSE
 )
 names(pipeline_res$fitResults$fits)
-length(pipeline_res$comparisons)
 ```
 
 ## Where next
