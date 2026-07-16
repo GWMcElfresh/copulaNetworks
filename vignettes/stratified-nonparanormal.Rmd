@@ -65,7 +65,7 @@ scores.
 ```{r synthetic-single}
 set.seed(42)
 d <- 8
-n_obs <- 200
+n_obs <- 250
 nodes <- paste0("node", seq_len(d))
 
 # Sparse precision: chain 1-2-...-d plus hubs 1-5 and 3-7. Off-diagonals set
@@ -111,19 +111,87 @@ true_edges <- sum(abs(omega_full[upper.tri(omega_full)]) > 1e-8)
 true_edges
 ```
 
-Fit one nonparanormal graphical model. StARS selects \(\lambda\) by edge
-stability; with the default threshold `0.1` this simulation is often too
-conservative to show the chain, so the vignette uses `starsThresh = 0.2` to
-keep a few recoverable edges visible.
+## StARS selection and `starsThresh`
+
+Glasso needs a penalty \(\lambda\): large \(\lambda\) empties the graph, small
+\(\lambda\) fills it in. With `method = "stars"`, **StARS** (Stability Approach
+to Regularization Selection; Liu, Roeder & Wasserman, 2010) chooses \(\lambda\)
+by subsample reproducibility rather than by likelihood. It fits the path on
+many overlapping subsamples, measures how often pairs of graphs disagree about
+each edge, averages that disagreement into a total instability, and then picks
+the least-regularized graph whose instability stays below a budget \(\beta\).
+
+In this package that budget is `starsThresh` (passed to
+`huge::huge.select(..., stars.thresh = )`). The other fit arguments matter as
+follows:
+
+| Argument | Role |
+|----------|------|
+| `method = "stars"` | Select \(\lambda\) by subsample edge stability (alternative: `"ebic"`). |
+| `nlambda` | Length of the glasso path; denser grids resolve \(\lambda\) more finely. |
+| `starsThresh` | Allowed average edge-disagreement \(\beta\) across subsamples. |
+
+Smaller `starsThresh` (e.g. `0.05`) demands more stability and therefore keeps
+more regularization: **sparser** graphs. Larger values (e.g. `0.2`) tolerate
+more subsample flicker and walk farther down the path: **denser** graphs. The
+package default `0.1` matches the usual `huge` recommendation under
+misspecification; `0.05` is the stricter alternative when the model is thought
+well specified.
+
+The same data under three thresholds shows the trade-off. Edge counts and
+selected \(\lambda\) move together; the network plots make the sparsity change
+visible.
+
+```{r stars-compare}
+stars_grid <- c(0.05, 0.1, 0.2)
+fits_stars <- lapply(stars_grid, function(th) {
+  FitStratumCopula(
+    dat,
+    nodeCols = nodes,
+    method = "stars",
+    nlambda = 40,
+    starsThresh = th
+  )
+})
+names(fits_stars) <- paste0("thresh_", stars_grid)
+
+stars_summary <- data.frame(
+  starsThresh = stars_grid,
+  lambdaOpt = vapply(fits_stars, function(f) f$lambdaOpt, numeric(1)),
+  nEdges = vapply(
+    fits_stars,
+    function(f) sum(f$adjacency[upper.tri(f$adjacency)]),
+    numeric(1)
+  ),
+  maxAbsPcor = vapply(
+    fits_stars,
+    function(f) max(abs(f$pcor[upper.tri(f$pcor)])),
+    numeric(1)
+  )
+)
+stars_summary
+```
+
+```{r stars-compare-networks, fig.cap="StARS networks at starsThresh = 0.05, 0.1, and 0.2", fig.height=4, fig.width=9}
+for (th in stars_grid) {
+  fit_th <- fits_stars[[paste0("thresh_", th)]]
+  print(PlotCopulaNetwork(
+    fit_th,
+    title = paste0("StARS network (starsThresh = ", th, ")")
+  ))
+}
+```
+
+On this moderate-\(n\) warped GGM, `0.05` and often `0.1` stop near the empty
+graph: the true chain edges are not yet stable enough across subsamples. Raising
+the budget to `0.2` admits a nontrivial skeleton. The remainder of the vignette
+uses that more permissive threshold so heatmaps and stratum comparisons have
+edges to display; production analyses that prioritize false-edge control should
+start at `0.1` (or `0.05`) and only raise `starsThresh` with that trade-off in
+mind.
 
 ```{r fit-single}
-fit_full <- FitStratumCopula(
-  dat,
-  nodeCols = nodes,
-  method = "stars",
-  nlambda = 40,
-  starsThresh = 0.2
-)
+fit_full <- fits_stars[["thresh_0.2"]]
 fit_full$n
 fit_full$lambdaOpt
 sum(fit_full$adjacency[upper.tri(fit_full$adjacency)])
@@ -137,18 +205,21 @@ draw_pheatmap(
 )
 ```
 
-Partial correlation after glasso:
+Partial correlation after glasso (`starsThresh = 0.2`):
 
 ```{r single-pcor, fig.cap="Single-stratum partial correlation"}
 draw_pheatmap(
-  PlotPcorHeatmap(fit_full, title = "Partial correlation (glasso)")
+  PlotPcorHeatmap(fit_full, title = "Partial correlation (glasso, starsThresh = 0.2)")
 )
 ```
 
 Selected network:
 
 ```{r single-network, fig.cap="Single-stratum copula network"}
-print(PlotCopulaNetwork(fit_full, title = "Nonparanormal network (full sample)"))
+print(PlotCopulaNetwork(
+  fit_full,
+  title = "Nonparanormal network (starsThresh = 0.2)"
+))
 ```
 
 ## Stratified path
@@ -161,7 +232,7 @@ impute or transform margins.
 
 ```{r synthetic-strata}
 set.seed(42)
-n_per <- 120
+n_per <- 150
 omega_a <- make_sparse_precision(
   d,
   edge_strength = 0.45,
