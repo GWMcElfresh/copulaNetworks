@@ -54,39 +54,77 @@ fits often use a denser path (e.g. `nlambda = 40`).
 
 ## Single-stratum warm-up
 
-Simulate a continuous block with one shared latent factor and idiosyncratic
-noise. Loadings in \([0.35, 0.75]\) keep residual variance identifiable while
-inducing a dense correlation skeleton for glasso to sparsify.
+A one-factor residual model produces dense correlations but nearly empty
+partial-correlation graphs after glasso, because most pairs are explained by
+the shared factor. To induce recoverable edges we simulate from a **sparse
+Gaussian graphical model**: a chain plus a few long-range edges in the
+precision matrix \(\Omega\), then apply mild nonlinear margin transforms so
+the observed scale is non-Gaussian while dependence lives in the latent
+scores.
 
 ```{r synthetic-single}
 set.seed(42)
 d <- 8
-n_obs <- 120
-lambda <- runif(d, 0.35, 0.75)
-f <- rnorm(n_obs)
-eps <- matrix(rnorm(n_obs * d), nrow = n_obs, ncol = d)
-factor_part <- matrix(lambda, nrow = n_obs, ncol = d, byrow = TRUE) * f
-x <- factor_part + sweep(eps, 2, sqrt(1 - lambda^2), `*`)
-colnames(x) <- paste0("node", seq_len(d))
-dat <- as.data.frame(x)
-nodes <- colnames(dat)
+n_obs <- 200
+nodes <- paste0("node", seq_len(d))
+
+# Sparse precision: chain 1-2-...-d plus hubs 1-5 and 3-7. Off-diagonals set
+# the target partial-correlation scale; a small eigen ridge enforces PD.
+make_sparse_precision <- function(d,
+                                  edge_strength = 0.6,
+                                  extra_edges = list(c(1L, 5L), c(3L, 7L))) {
+  omega <- diag(d)
+  for (i in seq_len(d - 1L)) {
+    omega[i, i + 1L] <- omega[i + 1L, i] <- -edge_strength
+  }
+  for (edge in extra_edges) {
+    i <- edge[1]
+    j <- edge[2]
+    omega[i, j] <- omega[j, i] <- -0.5
+  }
+  ev_min <- min(eigen(omega, symmetric = TRUE, only.values = TRUE)$values)
+  if (ev_min <= 0) {
+    omega <- omega + diag(abs(ev_min) + 0.2, d)
+  }
+  omega
+}
+
+sim_nonparanormal_ggm <- function(n_obs, omega, warp = TRUE) {
+  sigma <- solve(omega)
+  z <- matrix(rnorm(n_obs * nrow(omega)), n_obs, nrow(omega)) %*% chol(sigma)
+  colnames(z) <- nodes
+  if (!isTRUE(warp)) {
+    return(as.data.frame(z))
+  }
+  # Rank-preserving warps: nonparanormal should still recover the graph.
+  x <- z
+  x[, 1] <- exp(z[, 1] / 2)
+  x[, 2] <- z[, 2]^3
+  x[, 4] <- sinh(z[, 4])
+  as.data.frame(x)
+}
+
+omega_full <- make_sparse_precision(d, edge_strength = 0.6)
+dat <- sim_nonparanormal_ggm(n_obs, omega_full)
 dim(dat)
+true_edges <- sum(abs(omega_full[upper.tri(omega_full)]) > 1e-8)
+true_edges
 ```
 
-Fit one nonparanormal graphical model. StARS selects \(\lambda\) by edge
-stability rather than by information criteria alone, which is useful when
-\(n\) is moderate relative to \(p\).
+Fit one nonparanormal graphical model. We use eBIC here so the vignette recovers
+the sparse chain; StARS (`method = "stars"`) is available when edge stability
+matters more than sensitivity on moderate \(n\).
 
 ```{r fit-single}
 fit_full <- FitStratumCopula(
   dat,
   nodeCols = nodes,
-  method = "stars",
-  nlambda = 20,
-  starsThresh = 0.1
+  method = "ebic",
+  nlambda = 30
 )
 fit_full$n
 fit_full$lambdaOpt
+sum(fit_full$adjacency[upper.tri(fit_full$adjacency)])
 ```
 
 Copula correlation (empirical on normal scores):
@@ -113,26 +151,28 @@ print(PlotCopulaNetwork(fit_full, title = "Nonparanormal network (full sample)")
 
 ## Stratified path
 
-Dependence often differs by cohort, tissue, or timepoint. Here we add a binary
-group with a mild loading shift so stratum B is slightly more factor-driven than
-stratum A. The prepare step only builds named subsets; it does not impute or
-transform margins.
+Dependence often differs by cohort, tissue, or timepoint. Both strata share the
+chain skeleton; stratum B uses stronger edge weights and adds the edge
+\(2\text{--}6\), so comparison can separate shared from stratum-specific
+partial correlations. The prepare step only builds named subsets; it does not
+impute or transform margins.
 
 ```{r synthetic-strata}
 set.seed(42)
-n_per <- 80
-sim_group <- function(n_obs, lambda_shift = 0) {
-  lam <- pmax(0.2, pmin(0.85, lambda + lambda_shift))
-  f <- rnorm(n_obs)
-  eps <- matrix(rnorm(n_obs * d), nrow = n_obs, ncol = d)
-  factor_part <- matrix(lam, nrow = n_obs, ncol = d, byrow = TRUE) * f
-  x <- factor_part + sweep(eps, 2, sqrt(1 - lam^2), `*`)
-  colnames(x) <- nodes
-  as.data.frame(x)
-}
+n_per <- 120
+omega_a <- make_sparse_precision(
+  d,
+  edge_strength = 0.45,
+  extra_edges = list(c(1L, 5L), c(3L, 7L))
+)
+omega_b <- make_sparse_precision(
+  d,
+  edge_strength = 0.65,
+  extra_edges = list(c(1L, 5L), c(3L, 7L), c(2L, 6L))
+)
 dat_strata <- rbind(
-  cbind(group = "A", sim_group(n_per, lambda_shift = -0.05)),
-  cbind(group = "B", sim_group(n_per, lambda_shift = 0.08))
+  cbind(group = "A", sim_nonparanormal_ggm(n_per, omega_a)),
+  cbind(group = "B", sim_nonparanormal_ggm(n_per, omega_b))
 )
 dat_strata$group <- as.character(dat_strata$group)
 table(dat_strata$group)
@@ -157,13 +197,17 @@ names(prep$strata)
 ```{r fit-strata}
 fits <- FitCopulaStrata(
   prep,
-  method = "stars",
-  nlambda = 20,
-  starsThresh = 0.1,
+  method = "ebic",
+  nlambda = 30,
   minN = 30,
   includeFull = FALSE
 )
 names(fits$fits)
+vapply(
+  fits$fits,
+  function(fit) sum(fit$adjacency[upper.tri(fit$adjacency)]),
+  numeric(1)
+)
 ```
 
 Per-stratum correlation heatmaps:
@@ -228,8 +272,8 @@ pipeline_res <- RunCopulaPipeline(
     group = list(group_by = "group", minN = 30)
   ),
   outDir = out_dir,
-  method = "stars",
-  nlambda = 20,
+  method = "ebic",
+  nlambda = 30,
   minN = 30,
   plotDiagnostics = FALSE
 )
